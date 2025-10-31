@@ -19,7 +19,7 @@ export default function App() {
       label: 'Camera Sphere Radius'
     },
     patternScale: {
-      value: 20.0,
+      value: 10.0,
       min: 1.0,
       max: 100.0,
       step: 1.0,
