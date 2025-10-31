@@ -11,6 +11,19 @@ export const UI = () => {
   const { distance, kills, score, isGameOver, startGame, lastShotTime, lastHitTime } = useGame()
   const [showInstructions, setShowInstructions] = useState(true)
   const [currentTime, setCurrentTime] = useState(Date.now())
+  const [isMobile, setIsMobile] = useState(false)
+  const [isSlowMoPressed, setIsSlowMoPressed] = useState(false)
+
+  // Detect mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0
+      setIsMobile(hasTouch)
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -29,8 +42,28 @@ export const UI = () => {
     return () => clearInterval(interval)
   }, [])
 
+  // Slow-mo button handlers (simulate spacebar for mobile)
+  const handleSlowMoStart = () => {
+    setIsSlowMoPressed(true)
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: ' ' }))
+  }
+
+  const handleSlowMoEnd = () => {
+    setIsSlowMoPressed(false)
+    window.dispatchEvent(new KeyboardEvent('keyup', { key: ' ' }))
+  }
+
   const distanceMeters = Math.floor(distance)
   const scoreRounded = Math.floor(score)
+
+  // Calculate speed multiplier (same formula as GameControls)
+  const BASE_SPEED = 30
+  const SPEED_SCALE_POINTS = 500
+  const SPEED_SCALE_MULTIPLIER = 1.2
+  const MAX_SPEED = 150
+  const speedTier = Math.max(0, score) / SPEED_SCALE_POINTS
+  const scaledSpeed = Math.min(MAX_SPEED, BASE_SPEED * Math.pow(SPEED_SCALE_MULTIPLIER, speedTier))
+  const speedMultiplier = (scaledSpeed / BASE_SPEED).toFixed(1)
 
   // Calculate animation states
   const timeSinceShot = currentTime - lastShotTime
@@ -53,16 +86,29 @@ export const UI = () => {
     }}>
       {/* Score Display */}
       {!isGameOver && (
-        <div style={{
-          position: 'absolute',
-          top: '20px',
-          left: '20px',
-          fontSize: '28px',
-          fontWeight: 'bold',
-          textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
-        }}>
-          Score: {scoreRounded} | {kills} kills
-        </div>
+        <>
+          <div style={{
+            position: 'absolute',
+            top: '20px',
+            left: '20px',
+            fontSize: '28px',
+            fontWeight: 'bold',
+            textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
+          }}>
+            Score: {scoreRounded} | {kills} kills
+          </div>
+          <div style={{
+            position: 'absolute',
+            top: '20px',
+            right: '20px',
+            fontSize: '28px',
+            fontWeight: 'bold',
+            textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
+            color: speedMultiplier >= '3.0' ? '#ffff00' : speedMultiplier >= '2.0' ? '#ffaa00' : '#ffffff',
+          }}>
+            SPEED: {speedMultiplier}x
+          </div>
+        </>
       )}
 
       {/* Instructions (fade out after 4 seconds) */}
@@ -72,16 +118,27 @@ export const UI = () => {
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          fontSize: '22px',
+          fontSize: isMobile ? '18px' : '22px',
           textAlign: 'center',
           textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
           opacity: showInstructions ? 1 : 0,
           transition: 'opacity 0.5s',
           lineHeight: '1.5',
+          maxWidth: '90%',
         }}>
-          <div>Click to lock pointer</div>
-          <div>Mouse to aim | Click to shoot</div>
-          <div>Hold SPACEBAR for slow-mo (costs score)</div>
+          {isMobile ? (
+            <>
+              <div>Drag to look around</div>
+              <div>Tap to shoot asteroids</div>
+              <div>Hold slow-mo button (costs score)</div>
+            </>
+          ) : (
+            <>
+              <div>Click to lock pointer</div>
+              <div>Mouse to aim | Click to shoot</div>
+              <div>Hold SPACEBAR for slow-mo (costs score)</div>
+            </>
+          )}
         </div>
       )}
 
@@ -166,8 +223,8 @@ export const UI = () => {
             onClick={startGame}
             style={{
               pointerEvents: 'all',
-              fontSize: '24px',
-              padding: '15px 40px',
+              fontSize: isMobile ? '20px' : '24px',
+              padding: isMobile ? '20px 50px' : '15px 40px',
               backgroundColor: '#ffffff',
               color: '#000000',
               border: 'none',
@@ -176,15 +233,57 @@ export const UI = () => {
               fontFamily: '"Courier New", "Consolas", monospace',
               fontWeight: 'bold',
               boxShadow: '3px 3px 6px rgba(0,0,0,0.5)',
+              touchAction: 'manipulation',
             }}
-            onMouseEnter={(e) => {
+            onPointerDown={(e) => {
               e.currentTarget.style.backgroundColor = '#cccccc'
             }}
-            onMouseLeave={(e) => {
+            onPointerUp={(e) => {
+              e.currentTarget.style.backgroundColor = '#ffffff'
+            }}
+            onPointerLeave={(e) => {
               e.currentTarget.style.backgroundColor = '#ffffff'
             }}
           >
             RESTART
+          </button>
+        </div>
+      )}
+
+      {/* Mobile Slow-Mo Button */}
+      {isMobile && !isGameOver && (
+        <div style={{
+          position: 'absolute',
+          bottom: '30px',
+          right: '30px',
+          pointerEvents: 'all',
+        }}>
+          <button
+            onPointerDown={handleSlowMoStart}
+            onPointerUp={handleSlowMoEnd}
+            onPointerLeave={handleSlowMoEnd}
+            style={{
+              width: '80px',
+              height: '80px',
+              borderRadius: '50%',
+              backgroundColor: isSlowMoPressed ? 'rgba(255,255,100,0.8)' : 'rgba(255,255,255,0.7)',
+              color: '#000000',
+              border: '3px solid rgba(255,255,255,0.9)',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              fontFamily: '"Courier New", "Consolas", monospace',
+              cursor: 'pointer',
+              boxShadow: '3px 3px 8px rgba(0,0,0,0.5)',
+              touchAction: 'none',
+              userSelect: 'none',
+              WebkitTapHighlightColor: 'transparent',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              textAlign: 'center',
+            }}
+          >
+            SLOW-MO
           </button>
         </div>
       )}

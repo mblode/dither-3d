@@ -1,9 +1,9 @@
 import { Canvas } from "@react-three/fiber";
-import { PointerLockControls } from "@react-three/drei";
 import Scene from "./Scene";
 import Effects from "./components/Effects";
 import { GameProvider, INITIAL_CAMERA_POSITION } from "./Game";
 import { GameControls } from "./components/GameControls";
+import { CameraControls } from "./components/CameraControls";
 import { UI } from "./components/UI";
 
 export default function App() {
@@ -38,8 +38,8 @@ export default function App() {
         {/* Scene with dynamic asteroids */}
         <Scene />
 
-        {/* Mouse look controls */}
-        <PointerLockControls />
+        {/* Camera controls (desktop + mobile) */}
+        <CameraControls />
 
         {/* Game controls */}
         <GameControls />

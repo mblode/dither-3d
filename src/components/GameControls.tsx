@@ -4,9 +4,12 @@ import { Vector3, Vector2, Raycaster, Object3D } from 'three'
 import { useGame, INITIAL_CAMERA_POSITION } from '../Game'
 
 // Movement constants
-const BASE_SPEED = 60 // Base forward speed (units per second)
+const BASE_SPEED = 30 // Starting forward speed (units per second)
+const SPEED_SCALE_POINTS = 500 // Points needed for each speed tier
+const SPEED_SCALE_MULTIPLIER = 1.2 // Speed multiplier per tier (20% increase)
+const MAX_SPEED = 150 // Maximum speed cap (units per second)
 const SLOW_MOTION_MULTIPLIER = 0.5 // Speed multiplier when in slow-motion
-const SLOW_MOTION_COST_PER_SECOND = 100 // Score points deducted per second of slow-motion
+const SLOW_MOTION_COST_PER_SECOND = 200 // Score points deducted per second of slow-motion (2x kill rate)
 
 // Combat constants
 const SHOT_COOLDOWN_MS = 200 // Milliseconds between shots
@@ -87,12 +90,12 @@ export const GameControls = () => {
 
     window.addEventListener('keydown', handleKeyDown)
     window.addEventListener('keyup', handleKeyUp)
-    gl.domElement.addEventListener('mousedown', handleClick)
+    gl.domElement.addEventListener('pointerdown', handleClick)
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
       window.removeEventListener('keyup', handleKeyUp)
-      gl.domElement.removeEventListener('mousedown', handleClick)
+      gl.domElement.removeEventListener('pointerdown', handleClick)
     }
   }, [isPlaying, isGameOver, startGame, camera, incrementKills, removeAsteroid, addExplosion, setLastShotTime, setLastHitTime, scene, gl])
 
@@ -108,11 +111,15 @@ export const GameControls = () => {
   useFrame((_, delta) => {
     if (!isPlaying) return
 
-    // Constant speed movement with slow-motion mechanic (like SUPERHOT)
+    // Progressive speed system - gets faster as score increases
+    const speedTier = Math.max(0, score) / SPEED_SCALE_POINTS
+    const scaledSpeed = Math.min(MAX_SPEED, BASE_SPEED * Math.pow(SPEED_SCALE_MULTIPLIER, speedTier))
+
+    // Slow-mo activated via keyboard (spacebar) - mobile uses button that simulates spacebar
     const isSlowMo = (keysPressed.current[' '] || keysPressed.current['spacebar']) && score > 0
 
-    // Calculate current speed
-    const currentSpeed = isSlowMo ? BASE_SPEED * SLOW_MOTION_MULTIPLIER : BASE_SPEED
+    // Calculate current speed (with slow-motion multiplier if active)
+    const currentSpeed = isSlowMo ? scaledSpeed * SLOW_MOTION_MULTIPLIER : scaledSpeed
 
     // Deduct score if in slow-mo
     if (isSlowMo) {

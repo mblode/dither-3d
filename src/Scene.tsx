@@ -7,20 +7,30 @@ import { AsteroidGeometry } from "./components/AsteroidMesh";
 import { AsteroidMaterial } from "./components/AsteroidMaterial";
 
 const MAX_ASTEROIDS = 30;
-const SPAWN_INTERVAL = 0.8; // seconds
+const SPAWN_INTERVAL_START = 1.2; // Starting spawn interval (seconds)
+const SPAWN_INTERVAL_MIN = 0.3; // Minimum spawn interval at high scores
 const SPAWN_DISTANCE_MIN = 60; // Spawn ahead of camera
 const SPAWN_DISTANCE_MAX = 150;
 const REMOVE_DISTANCE = 200; // Remove when far from camera (any direction)
 const MIN_SPAWN_SAFETY = 15; // Minimum distance from camera when spawning
 
+// Difficulty scaling constants
+const SPAWN_RATE_SCALE = 2000; // Score points to reduce spawn interval
+const VELOCITY_SCALE = 500; // Score points to increase asteroid velocity
+
 // Helper function to create asteroid properties (avoids code duplication)
-function createAsteroidProperties(id: number): Omit<Asteroid, "position"> {
-  // Random linear velocity
+function createAsteroidProperties(id: number, score: number = 0): Omit<Asteroid, "position"> {
+  // Random linear velocity with scaling based on score
   const dirX = (Math.random() - 0.5) * 2;
   const dirY = (Math.random() - 0.5) * 2;
   const dirZ = (Math.random() - 0.5) * 2;
   const length = Math.sqrt(dirX * dirX + dirY * dirY + dirZ * dirZ);
-  const speed = 0.5 + Math.random() * 10; // 0.5-10.5 units/sec
+
+  // Scale max velocity with score: starts at 10.5, increases by 1 per 500 points
+  const baseMaxVelocity = 10;
+  const velocityBonus = Math.max(0, score) / VELOCITY_SCALE;
+  const maxVelocity = baseMaxVelocity + velocityBonus;
+  const speed = 0.5 + Math.random() * maxVelocity; // 0.5 to (10.5 + bonus) units/sec
 
   const velocityX = (dirX / length) * speed;
   const velocityY = (dirY / length) * speed;
@@ -58,7 +68,7 @@ function createAsteroidProperties(id: number): Omit<Asteroid, "position"> {
 
 export default function Scene() {
   const { camera } = useThree();
-  const { asteroids, setAsteroids, isPlaying, isGameOver } = useGame();
+  const { asteroids, setAsteroids, isPlaying, isGameOver, score } = useGame();
 
   const nextIdRef = useRef(0);
   const spawnAccumulator = useRef(0);
@@ -130,7 +140,7 @@ export default function Scene() {
 
       // Create asteroid with helper function
       initialAsteroids.push({
-        ...createAsteroidProperties(nextIdRef.current++),
+        ...createAsteroidProperties(nextIdRef.current++, 0), // Start at score 0
         position: [x, y, z],
       });
     }
@@ -180,11 +190,18 @@ export default function Scene() {
       needsStateUpdate = true;
     }
 
+    // Calculate dynamic spawn interval based on score (gets faster over time)
+    // Formula: spawnInterval = max(0.3, 1.2 - score/2000)
+    const currentSpawnInterval = Math.max(
+      SPAWN_INTERVAL_MIN,
+      SPAWN_INTERVAL_START - Math.max(0, score) / SPAWN_RATE_SCALE
+    );
+
     // Spawn new asteroids using accumulated time
     spawnAccumulator.current += delta;
 
     if (
-      spawnAccumulator.current >= SPAWN_INTERVAL &&
+      spawnAccumulator.current >= currentSpawnInterval &&
       asteroidsRef.current.length < MAX_ASTEROIDS
     ) {
       spawnAccumulator.current = 0;
@@ -217,9 +234,9 @@ export default function Scene() {
           continue;
         }
 
-        // Create asteroid with helper function
+        // Create asteroid with helper function (pass current score for difficulty scaling)
         asteroidsRef.current.push({
-          ...createAsteroidProperties(nextIdRef.current++),
+          ...createAsteroidProperties(nextIdRef.current++, score),
           position: [x, y, z],
         });
       }
