@@ -1,73 +1,52 @@
-import { Canvas } from '@react-three/fiber'
-import { OrbitControls, PointerLockControls } from '@react-three/drei'
-import { useControls } from 'leva'
-import Scene from './Scene'
-import Effects from './components/Effects'
-import KeyboardControls from './components/KeyboardControls'
+import { Canvas } from "@react-three/fiber";
+import { PointerLockControls } from "@react-three/drei";
+import Scene from "./Scene";
+import Effects from "./components/Effects";
+import { GameProvider, INITIAL_CAMERA_POSITION } from "./Game";
+import { GameControls } from "./components/GameControls";
+import { UI } from "./components/UI";
 
 export default function App() {
-  const { sphereRadius, patternScale, threshold, flyMode } = useControls({
-    flyMode: {
-      value: false,
-      label: 'Fly Mode'
-    },
-    sphereRadius: {
-      value: 10.0,
-      min: 1.0,
-      max: 50.0,
-      step: 0.5,
-      label: 'Camera Sphere Radius'
-    },
-    patternScale: {
-      value: 10.0,
-      min: 1.0,
-      max: 100.0,
-      step: 1.0,
-      label: 'Pattern Scale'
-    },
-    threshold: {
-      value: 0.5,
-      min: 0.0,
-      max: 1.0,
-      step: 0.01,
-      label: 'Threshold Bias'
-    }
-  })
-
   return (
-    <Canvas
-      camera={{
-        position: [0, 0, 10],
-        fov: 75,
-        near: 0.1,
-        far: 500
-      }}
-      dpr={[1, 2]}
-    >
-      {/* Lighting */}
-      <ambientLight intensity={0.4} />
-      <directionalLight position={[10, 10, 5]} intensity={0.8} castShadow />
-      <directionalLight position={[-5, 5, -5]} intensity={0.3} />
+    <GameProvider>
+      <UI />
+      <Canvas
+        camera={{
+          position: INITIAL_CAMERA_POSITION,
+          fov: 75,
+          near: 0.1,
+          far: 500,
+        }}
+        dpr={[1, 2]}
+      >
+        {/* Multi-directional lighting for maximum asteroid visibility */}
+        <ambientLight intensity={1.0} />
 
-      {/* Scene with test objects */}
-      <Scene />
+        {/* Main sun - from upper back */}
+        <directionalLight
+          position={[100, 200, -300]}
+          intensity={1.5}
+          castShadow
+        />
 
-      {/* Camera controls - switch between orbit and fly */}
-      {flyMode ? (
-        <>
-          <PointerLockControls />
-          <KeyboardControls />
-        </>
-      ) : (
-        <OrbitControls makeDefault />
-      )}
+        {/* Fill lights from multiple angles */}
+        <directionalLight position={[-100, 100, 200]} intensity={1.2} />
+        <directionalLight position={[100, -100, 100]} intensity={1.0} />
+        <directionalLight position={[0, 100, 300]} intensity={1.0} />
+        <directionalLight position={[-150, 0, -100]} intensity={0.8} />
 
-      {/* Post-processing with dither effect */}
-      <Effects
-        sphereRadius={sphereRadius}
-        patternScale={patternScale}
-        threshold={threshold}
-      />
-    </Canvas>
-  )
+        {/* Scene with dynamic asteroids */}
+        <Scene />
+
+        {/* Mouse look controls */}
+        <PointerLockControls />
+
+        {/* Game controls */}
+        <GameControls />
+
+        {/* Post-processing with dither effect */}
+        <Effects sphereRadius={10.0} patternScale={10.0} threshold={0.5} />
+      </Canvas>
+    </GameProvider>
+  );
 }
