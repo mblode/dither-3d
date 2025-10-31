@@ -6,21 +6,10 @@ import Effects from './components/Effects'
 import KeyboardControls from './components/KeyboardControls'
 
 export default function App() {
-  const { sphereRadius, patternScale, threshold, flyMode, pixelationEnabled, pixelSize } = useControls({
+  const { sphereRadius, patternScale, threshold, flyMode } = useControls({
     flyMode: {
       value: false,
       label: 'Fly Mode'
-    },
-    pixelationEnabled: {
-      value: false,
-      label: 'Pixelation (Retro)'
-    },
-    pixelSize: {
-      value: 6,
-      min: 1,
-      max: 16,
-      step: 1,
-      label: 'Pixel Size'
     },
     sphereRadius: {
       value: 10.0,
@@ -78,8 +67,6 @@ export default function App() {
         sphereRadius={sphereRadius}
         patternScale={patternScale}
         threshold={threshold}
-        pixelationEnabled={pixelationEnabled}
-        pixelSize={pixelSize}
       />
     </Canvas>
   )

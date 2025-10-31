@@ -65,14 +65,7 @@ npm run preview
 
 ### Visual Settings (Leva Panel)
 
-**Control Modes:**
 - **Fly Mode**: Toggle between orbit controls and free-fly WASD controls
-
-**Retro Effects:**
-- **Pixelation (Retro)**: Enable pixelated 320x240-style retro effect
-- **Pixel Size**: Control the size of pixels (1-16, larger = chunkier retro look)
-
-**Dithering:**
 - **Camera Sphere Radius**: Controls the radius of the invisible sphere around the camera that the dither pattern is mapped to (1.0 - 50.0)
 - **Pattern Scale**: Controls the tiling/scale of the blue noise pattern on the sphere (1.0 - 100.0)
 - **Threshold Bias**: Adjusts the brightness threshold for the dithering effect (0.0 - 1.0)

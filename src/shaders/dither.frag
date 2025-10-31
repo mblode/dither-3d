@@ -32,7 +32,7 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
   float dithered = step(noise, adjusted);
 
   // Custom colors: #333319 (dark gray-green) and #ffffff (white)
-  vec3 darkColor = vec3(0.2, 0.2, 0.1);  // #333319 in linear RGB (51/255, 51/255, 25/255)
+  vec3 darkColor = vec3(0.1, 0.1, 0.05);  // #333319 in linear RGB (51/255, 51/255, 25/255)
   vec3 lightColor = vec3(1.0, 1.0, 1.0);  // #ffffff (white)
   vec3 finalColor = mix(darkColor, lightColor, dithered);
 
