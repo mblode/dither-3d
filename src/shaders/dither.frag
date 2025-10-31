@@ -5,6 +5,11 @@ uniform float sphereRadius;
 uniform float patternScale;
 uniform float threshold;
 
+// Convert sRGB to linear RGB
+vec3 sRGBToLinear(vec3 srgb) {
+  return pow(srgb, vec3(2.2));
+}
+
 vec2 directionToSphericalUV(vec3 dir) {
   vec3 n = normalize(dir);
   float phi = atan(n.z, n.x);
@@ -32,7 +37,9 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
   float dithered = step(noise, adjusted);
 
   // Custom colors: #333319 (dark gray-green) and #ffffff (white)
-  vec3 darkColor = vec3(0.1, 0.1, 0.05);  // #333319 in linear RGB (51/255, 51/255, 25/255)
+  // Convert from sRGB hex values to linear RGB for proper rendering
+  vec3 darkColorSRGB = vec3(51.0/255.0, 51.0/255.0, 25.0/255.0);  // #333319 in sRGB
+  vec3 darkColor = sRGBToLinear(darkColorSRGB);
   vec3 lightColor = vec3(1.0, 1.0, 1.0);  // #ffffff (white)
   vec3 finalColor = mix(darkColor, lightColor, dithered);
 
