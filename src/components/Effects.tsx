@@ -1,24 +1,24 @@
-import { EffectComposer } from '@react-three/postprocessing'
-import DitherEffect from './DitherEffect'
+import { EffectComposer } from "@react-three/postprocessing";
+import DitherEffect from "./DitherEffect";
 
 interface EffectsProps {
-  sphereRadius: number
-  patternScale: number
-  threshold: number
+  patternScale: number;
+  threshold: number;
+  pixelSize?: number;
 }
 
 export default function Effects({
-  sphereRadius,
   patternScale,
-  threshold
+  threshold,
+  pixelSize = 1.0,
 }: EffectsProps) {
   return (
     <EffectComposer>
       <DitherEffect
-        sphereRadius={sphereRadius}
         patternScale={patternScale}
         threshold={threshold}
+        pixelSize={pixelSize}
       />
     </EffectComposer>
-  )
+  );
 }
