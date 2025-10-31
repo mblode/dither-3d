@@ -1,0 +1,42 @@
+{
+  "name": "dither-3d",
+  "version": "1.0.0",
+  "description": "Three.js demo with camera-sphere mapped blue noise dithering (Obra Dinn style)",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [
+    "blue-noise",
+    "dithering",
+    "threejs",
+    "obra-dinn",
+    "webgl",
+    "shader"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@react-three/drei": "^9.117.3",
+    "@react-three/fiber": "^8.17.10",
+    "@react-three/postprocessing": "^2.16.3",
+    "leva": "^0.9.35",
+    "postprocessing": "^6.36.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "three": "^0.170.0"
+  },
+  "devDependencies": {
+    "@rollup/pluginutils": "^5.3.0",
+    "@types/node": "^22.9.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@types/three": "^0.170.0",
+    "@vitejs/plugin-react": "^4.3.3",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.11",
+    "vite-plugin-glsl": "^1.3.0"
+  }
+}
