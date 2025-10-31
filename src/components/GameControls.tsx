@@ -1,12 +1,12 @@
 import { useEffect, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
-import { Vector3, Raycaster, Object3D } from 'three'
+import { Vector3, Vector2, Raycaster, Object3D } from 'three'
 import { useGame, INITIAL_CAMERA_POSITION } from '../Game'
 
 // Movement constants
 const BASE_SPEED = 60 // Base forward speed (units per second)
 const SLOW_MOTION_MULTIPLIER = 0.5 // Speed multiplier when in slow-motion
-const SLOW_MOTION_COST_PER_SECOND = 1 // Score points deducted per second of slow-motion
+const SLOW_MOTION_COST_PER_SECOND = 100 // Score points deducted per second of slow-motion
 
 // Combat constants
 const SHOT_COOLDOWN_MS = 200 // Milliseconds between shots
@@ -55,7 +55,7 @@ export const GameControls = () => {
 
       // Raycasting from camera center
       const raycaster = new Raycaster()
-      raycaster.setFromCamera({ x: 0, y: 0 }, camera) // Center of screen
+      raycaster.setFromCamera(new Vector2(0, 0), camera) // Center of screen
 
       // Find all asteroid meshes by traversing the scene directly
       const asteroidMeshes: Object3D[] = []

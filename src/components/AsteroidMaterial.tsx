@@ -249,7 +249,7 @@ export const AsteroidMaterial = ({
     <meshStandardMaterial
       map={texture}
       normalMap={normalMap}
-      normalScale={[1.5, 1.5]}
+      normalScale={new THREE.Vector2(1.5, 1.5)}
       color={color}
       roughness={roughness}
       metalness={0.1}

@@ -81,7 +81,7 @@ export const UI = () => {
         }}>
           <div>Click to lock pointer</div>
           <div>Mouse to aim | Click to shoot</div>
-          <div>Hold SPACEBAR to boost (costs score)</div>
+          <div>Hold SPACEBAR for slow-mo (costs score)</div>
         </div>
       )}
 
