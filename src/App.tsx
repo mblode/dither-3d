@@ -45,7 +45,7 @@ export default function App() {
         <GameControls />
 
         {/* Post-processing with dither effect */}
-        <Effects sphereRadius={10.0} patternScale={10.0} threshold={0.5} />
+        <Effects patternScale={10.0} threshold={0.5} />
       </Canvas>
     </GameProvider>
   );
