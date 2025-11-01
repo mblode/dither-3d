@@ -20,7 +20,6 @@ export const UI = () => {
   const [showInstructions, setShowInstructions] = useState(true);
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [isMobile, setIsMobile] = useState(false);
-  const [isSlowMoPressed, setIsSlowMoPressed] = useState(false);
 
   // Detect mobile
   useEffect(() => {
@@ -49,17 +48,6 @@ export const UI = () => {
 
     return () => clearInterval(interval);
   }, []);
-
-  // Slow-mo button handlers (simulate spacebar for mobile)
-  const handleSlowMoStart = () => {
-    setIsSlowMoPressed(true);
-    window.dispatchEvent(new KeyboardEvent("keydown", { key: " " }));
-  };
-
-  const handleSlowMoEnd = () => {
-    setIsSlowMoPressed(false);
-    window.dispatchEvent(new KeyboardEvent("keyup", { key: " " }));
-  };
 
   const distanceMeters = Math.floor(distance);
   const scoreRounded = Math.floor(score);
@@ -149,15 +137,15 @@ export const UI = () => {
         >
           {isMobile ? (
             <>
-              <div>Drag to look around</div>
-              <div>Tap to shoot asteroids</div>
-              <div>Hold slow-mo button (costs score)</div>
+              <div>Touch and drag to aim</div>
+              <div>Auto-fires while touching</div>
+              <div>Dodge the asteroids!</div>
             </>
           ) : (
             <>
               <div>Click to lock pointer</div>
               <div>Mouse to aim, click to shoot</div>
-              <div>Hold SPACEBAR for slow-mo (costs score)</div>
+              <div>Dodge the asteroids!</div>
             </>
           )}
         </div>
@@ -280,46 +268,6 @@ export const UI = () => {
         </div>
       )}
 
-      {/* Mobile Slow-Mo Button */}
-      {isMobile && !isGameOver && (
-        <div
-          style={{
-            position: "absolute",
-            bottom: "30px",
-            right: "30px",
-            pointerEvents: "all",
-          }}
-        >
-          <button
-            onPointerDown={handleSlowMoStart}
-            onPointerUp={handleSlowMoEnd}
-            onPointerLeave={handleSlowMoEnd}
-            style={{
-              width: "80px",
-              height: "80px",
-              borderRadius: "50%",
-              backgroundColor: isSlowMoPressed
-                ? "rgba(255,255,100,0.8)"
-                : "rgba(255,255,255,0.7)",
-              color: "#000000",
-              border: "3px solid rgba(255,255,255,0.9)",
-              fontSize: "14px",
-              fontWeight: "bold",
-              fontFamily: '"VT323", monospace',
-              cursor: "pointer",
-              touchAction: "none",
-              userSelect: "none",
-              WebkitTapHighlightColor: "transparent",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              textAlign: "center",
-            }}
-          >
-            SLOW-MO
-          </button>
-        </div>
-      )}
     </div>
   );
 };

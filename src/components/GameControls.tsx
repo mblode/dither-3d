@@ -8,8 +8,6 @@ const BASE_SPEED = 30 // Starting forward speed (units per second)
 const SPEED_SCALE_POINTS = 500 // Points needed for each speed tier
 const SPEED_SCALE_MULTIPLIER = 1.2 // Speed multiplier per tier (20% increase)
 const MAX_SPEED = 150 // Maximum speed cap (units per second)
-const SLOW_MOTION_MULTIPLIER = 0.5 // Speed multiplier when in slow-motion
-const SLOW_MOTION_COST_PER_SECOND = 200 // Score points deducted per second of slow-motion (2x kill rate)
 
 // Combat constants
 const SHOT_COOLDOWN_MS = 200 // Milliseconds between shots
@@ -25,6 +23,70 @@ export const GameControls = () => {
   const keysPressed = useRef<{ [key: string]: boolean }>({})
   const lastShotTime = useRef<number>(0)
   const startPosition = useRef<Vector3>(new Vector3(...INITIAL_CAMERA_POSITION))
+  const isTouching = useRef<boolean>(false)
+  const autoFireInterval = useRef<number | null>(null)
+
+  // Extract shoot logic into reusable function
+  const shootRaycast = () => {
+    if (!isPlaying) return
+
+    const now = Date.now()
+
+    if (now - lastShotTime.current < SHOT_COOLDOWN_MS) return
+    lastShotTime.current = now
+    setLastShotTime(now)
+
+    // Raycasting from camera center
+    const raycaster = new Raycaster()
+    raycaster.setFromCamera(new Vector2(0, 0), camera) // Center of screen
+
+    // Find all asteroid meshes by traversing the scene directly
+    const asteroidMeshes: Object3D[] = []
+    scene.traverse((obj) => {
+      if (obj.type === 'Mesh' && obj.userData.asteroidId !== undefined) {
+        asteroidMeshes.push(obj)
+      }
+    })
+
+    if (asteroidMeshes.length === 0) return
+
+    const intersects = raycaster.intersectObjects(asteroidMeshes, false)
+
+    if (intersects.length > 0) {
+      // Hit! Find which asteroid was hit
+      const hitMesh = intersects[0].object
+      const hitPosition = intersects[0].point
+      const asteroidId = hitMesh.userData.asteroidId
+
+      // Create explosion at hit position
+      addExplosion([hitPosition.x, hitPosition.y, hitPosition.z])
+      setLastHitTime(now)
+
+      // Remove asteroid
+      removeAsteroid(asteroidId)
+      incrementKills()
+    }
+  }
+
+  // Auto-fire management
+  const startAutoFire = () => {
+    if (autoFireInterval.current !== null) return
+
+    // Fire immediately on touch start
+    shootRaycast()
+
+    // Then continue firing at intervals
+    autoFireInterval.current = window.setInterval(() => {
+      shootRaycast()
+    }, SHOT_COOLDOWN_MS)
+  }
+
+  const stopAutoFire = () => {
+    if (autoFireInterval.current !== null) {
+      clearInterval(autoFireInterval.current)
+      autoFireInterval.current = null
+    }
+  }
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -48,54 +110,52 @@ export const GameControls = () => {
         return
       }
 
-      if (!isPlaying) return
-
-      const now = Date.now()
-
-      if (now - lastShotTime.current < SHOT_COOLDOWN_MS) return
-      lastShotTime.current = now
-      setLastShotTime(now)
-
-      // Raycasting from camera center
-      const raycaster = new Raycaster()
-      raycaster.setFromCamera(new Vector2(0, 0), camera) // Center of screen
-
-      // Find all asteroid meshes by traversing the scene directly
-      const asteroidMeshes: Object3D[] = []
-      scene.traverse((obj) => {
-        if (obj.type === 'Mesh' && obj.userData.asteroidId !== undefined) {
-          asteroidMeshes.push(obj)
-        }
-      })
-
-      if (asteroidMeshes.length === 0) return
-
-      const intersects = raycaster.intersectObjects(asteroidMeshes, false)
-
-      if (intersects.length > 0) {
-        // Hit! Find which asteroid was hit
-        const hitMesh = intersects[0].object
-        const hitPosition = intersects[0].point
-        const asteroidId = hitMesh.userData.asteroidId
-
-        // Create explosion at hit position
-        addExplosion([hitPosition.x, hitPosition.y, hitPosition.z])
-        setLastHitTime(now)
-
-        // Remove asteroid
-        removeAsteroid(asteroidId)
-        incrementKills()
-      }
+      // Desktop click-to-shoot (single shot per click)
+      shootRaycast()
     }
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (isGameOver) return
+      // Prevent pointerdown from also firing
+      e.preventDefault()
+      isTouching.current = true
+      startAutoFire()
+    }
+
+    const handleTouchEnd = () => {
+      isTouching.current = false
+      stopAutoFire()
+    }
+
+    // Detect if device is mobile/touch
+    const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0
 
     window.addEventListener('keydown', handleKeyDown)
     window.addEventListener('keyup', handleKeyUp)
-    gl.domElement.addEventListener('pointerdown', handleClick)
+
+    if (isMobile) {
+      // Mobile: Use touch events for auto-fire
+      gl.domElement.addEventListener('touchstart', handleTouchStart, { passive: false })
+      gl.domElement.addEventListener('touchend', handleTouchEnd)
+      gl.domElement.addEventListener('touchcancel', handleTouchEnd)
+    } else {
+      // Desktop: Use pointerdown for click-to-shoot
+      gl.domElement.addEventListener('pointerdown', handleClick)
+    }
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
       window.removeEventListener('keyup', handleKeyUp)
-      gl.domElement.removeEventListener('pointerdown', handleClick)
+
+      if (isMobile) {
+        gl.domElement.removeEventListener('touchstart', handleTouchStart)
+        gl.domElement.removeEventListener('touchend', handleTouchEnd)
+        gl.domElement.removeEventListener('touchcancel', handleTouchEnd)
+      } else {
+        gl.domElement.removeEventListener('pointerdown', handleClick)
+      }
+
+      stopAutoFire()
     }
   }, [isPlaying, isGameOver, startGame, camera, incrementKills, removeAsteroid, addExplosion, setLastShotTime, setLastHitTime, scene, gl])
 
@@ -113,18 +173,7 @@ export const GameControls = () => {
 
     // Progressive speed system - gets faster as score increases
     const speedTier = Math.max(0, score) / SPEED_SCALE_POINTS
-    const scaledSpeed = Math.min(MAX_SPEED, BASE_SPEED * Math.pow(SPEED_SCALE_MULTIPLIER, speedTier))
-
-    // Slow-mo activated via keyboard (spacebar) - mobile uses button that simulates spacebar
-    const isSlowMo = (keysPressed.current[' '] || keysPressed.current['spacebar']) && score > 0
-
-    // Calculate current speed (with slow-motion multiplier if active)
-    const currentSpeed = isSlowMo ? scaledSpeed * SLOW_MOTION_MULTIPLIER : scaledSpeed
-
-    // Deduct score if in slow-mo
-    if (isSlowMo) {
-      updateScore(-SLOW_MOTION_COST_PER_SECOND * delta)
-    }
+    const currentSpeed = Math.min(MAX_SPEED, BASE_SPEED * Math.pow(SPEED_SCALE_MULTIPLIER, speedTier))
 
     // Get camera forward direction
     const forward = new Vector3()
