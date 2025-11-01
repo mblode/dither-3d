@@ -19,7 +19,10 @@ const SPAWN_RATE_SCALE = 2000; // Score points to reduce spawn interval
 const VELOCITY_SCALE = 500; // Score points to increase asteroid velocity
 
 // Helper function to create asteroid properties (avoids code duplication)
-function createAsteroidProperties(id: number, score: number = 0): Omit<Asteroid, "position"> {
+function createAsteroidProperties(
+  id: number,
+  score: number = 0,
+): Omit<Asteroid, "position"> {
   // Random linear velocity with scaling based on score
   const dirX = (Math.random() - 0.5) * 2;
   const dirY = (Math.random() - 0.5) * 2;
@@ -77,7 +80,7 @@ export default function Scene() {
 
   // Generate static background stars once
   const backgroundStars = useMemo(() => {
-    return Array.from({ length: 100 }).map(() => {
+    return Array.from({ length: 200 }).map(() => {
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
       const radius = 300 + Math.random() * 200;
@@ -88,7 +91,7 @@ export default function Scene() {
 
       return {
         position: [x, y, z] as [number, number, number],
-        size: 0.2 + Math.random() * 0.3, // 0.2-0.5 units (tiny pixels)
+        size: 0.5 + Math.random() * 0.5, // 2-4 units (more visible)
       };
     });
   }, []);
@@ -194,7 +197,7 @@ export default function Scene() {
     // Formula: spawnInterval = max(0.3, 1.2 - score/2000)
     const currentSpawnInterval = Math.max(
       SPAWN_INTERVAL_MIN,
-      SPAWN_INTERVAL_START - Math.max(0, score) / SPAWN_RATE_SCALE
+      SPAWN_INTERVAL_START - Math.max(0, score) / SPAWN_RATE_SCALE,
     );
 
     // Spawn new asteroids using accumulated time
