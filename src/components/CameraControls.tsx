@@ -48,7 +48,15 @@ export const CameraControls = () => {
 
     return () => {
       gl.domElement.removeEventListener('click', handleClick)
-      controls.unlock()
+      // Only unlock if currently locked
+      if (controls.isLocked) {
+        try {
+          controls.unlock()
+        } catch (e) {
+          // Ignore unlock errors - happens when pointer lock not supported
+          console.warn('Failed to unlock pointer:', e)
+        }
+      }
       controls.dispose()
     }
   }, [camera, gl, isPlaying, isMobile])
