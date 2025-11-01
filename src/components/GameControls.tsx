@@ -25,6 +25,12 @@ export const GameControls = () => {
   const startPosition = useRef<Vector3>(new Vector3(...INITIAL_CAMERA_POSITION))
   const isTouching = useRef<boolean>(false)
   const autoFireInterval = useRef<number | null>(null)
+  const scoreRef = useRef<number>(score)
+
+  // Keep scoreRef in sync with score
+  useEffect(() => {
+    scoreRef.current = score
+  }, [score])
 
   // Extract shoot logic into reusable function
   const shootRaycast = () => {
@@ -58,13 +64,18 @@ export const GameControls = () => {
       const hitPosition = intersects[0].point
       const asteroidId = hitMesh.userData.asteroidId
 
+      // Calculate current speed multiplier for scoring (use ref for latest value)
+      const speedTier = Math.max(0, scoreRef.current) / SPEED_SCALE_POINTS
+      const currentSpeed = Math.min(MAX_SPEED, BASE_SPEED * Math.pow(SPEED_SCALE_MULTIPLIER, speedTier))
+      const speedMultiplier = currentSpeed / BASE_SPEED
+
       // Create explosion at hit position
       addExplosion([hitPosition.x, hitPosition.y, hitPosition.z])
       setLastHitTime(now)
 
       // Remove asteroid
       removeAsteroid(asteroidId)
-      incrementKills()
+      incrementKills(speedMultiplier)
     }
   }
 

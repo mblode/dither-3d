@@ -57,7 +57,7 @@ interface GameContextType extends GameState {
   endGame: () => void
   updateScore: (points: number) => void
   updateDistance: (dist: number) => void
-  incrementKills: () => void
+  incrementKills: (speedMultiplier?: number) => void
   removeAsteroid: (id: number) => void
   addExplosion: (position: [number, number, number]) => void
   setAsteroids: (asteroids: Asteroid[]) => void
@@ -132,11 +132,12 @@ export const GameProvider = ({ children }: GameProviderProps) => {
     }))
   }, [])
 
-  const incrementKills = useCallback(() => {
+  const incrementKills = useCallback((speedMultiplier: number = 1) => {
+    const points = Math.floor(POINTS_PER_KILL * speedMultiplier)
     setGameState((prev) => ({
       ...prev,
       kills: prev.kills + 1,
-      score: prev.score + POINTS_PER_KILL,
+      score: prev.score + points,
     }))
   }, [])
 

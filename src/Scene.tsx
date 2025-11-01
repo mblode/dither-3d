@@ -1,5 +1,6 @@
 import { useEffect, useRef, useMemo } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
+import * as THREE from "three";
 import { useGame } from "./Game";
 import type { Asteroid } from "./Game";
 import { Explosions } from "./components/Explosion";
@@ -78,23 +79,29 @@ export default function Scene() {
   const asteroidsRef = useRef<Asteroid[]>([]);
   const initializedRef = useRef(false);
 
-  // Generate static background stars once
-  const backgroundStars = useMemo(() => {
-    return Array.from({ length: 200 }).map(() => {
+  // Generate static background stars once as a point cloud
+  const starGeometry = useMemo(() => {
+    const starCount = 200;
+    const positions = new Float32Array(starCount * 3);
+    const sizes = new Float32Array(starCount);
+
+    for (let i = 0; i < starCount; i++) {
+      // Spherical distribution
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
-      const radius = 300 + Math.random() * 200;
+      const radius = 100; // Fixed radius for all stars
 
-      const x = radius * Math.sin(phi) * Math.cos(theta);
-      const y = radius * Math.sin(phi) * Math.sin(theta);
-      const z = radius * Math.cos(phi);
+      positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
+      positions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
+      positions[i * 3 + 2] = radius * Math.cos(phi);
 
-      return {
-        position: [x, y, z] as [number, number, number],
-        size: 0.5 + Math.random() * 0.5, // 2-4 units (more visible)
-      };
-    });
+      sizes[i] = 0.5 + Math.random() * 0.5;
+    }
+
+    return { positions, sizes };
   }, []);
+
+  const starsRef = useRef<THREE.Points>(null);
 
   // Initialize asteroids on mount and when game restarts
   useEffect(() => {
@@ -249,17 +256,38 @@ export default function Scene() {
     if (needsStateUpdate) {
       setAsteroids([...asteroidsRef.current]);
     }
+
+    // Update star position to follow camera (skybox effect - infinite distance)
+    if (starsRef.current) {
+      starsRef.current.position.copy(camera.position);
+    }
   });
 
   return (
     <>
-      {/* Background stars - distant static points */}
-      {backgroundStars.map((star, i) => (
-        <mesh key={`star-${i}`} position={star.position}>
-          <sphereGeometry args={[star.size, 4, 4]} />
-          <meshBasicMaterial color="#ffffff" />
-        </mesh>
-      ))}
+      {/* Background stars - skybox at infinite distance */}
+      <points ref={starsRef}>
+        <bufferGeometry>
+          <bufferAttribute
+            attach="attributes-position"
+            count={starGeometry.positions.length / 3}
+            array={starGeometry.positions}
+            itemSize={3}
+          />
+          <bufferAttribute
+            attach="attributes-size"
+            count={starGeometry.sizes.length}
+            array={starGeometry.sizes}
+            itemSize={1}
+          />
+        </bufferGeometry>
+        <pointsMaterial
+          color="#ffffff"
+          size={1.5}
+          sizeAttenuation={false}
+          transparent={false}
+        />
+      </points>
 
       {/* Dynamic asteroids - render from ref for real-time position updates */}
       {asteroidsRef.current.map((asteroid) => (
