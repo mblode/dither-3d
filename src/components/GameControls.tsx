@@ -103,15 +103,22 @@ export const GameControls = () => {
       keysPressed.current[e.key.toLowerCase()] = false
     }
 
-    const handleClick = () => {
+    const handlePointerDown = () => {
       // Allow restart by clicking anywhere when game is over
       if (isGameOver) {
         startGame()
         return
       }
 
-      // Desktop click-to-shoot (single shot per click)
-      shootRaycast()
+      // Desktop: Start auto-fire on mouse down
+      isTouching.current = true
+      startAutoFire()
+    }
+
+    const handlePointerUp = () => {
+      // Desktop: Stop auto-fire on mouse up
+      isTouching.current = false
+      stopAutoFire()
     }
 
     const handleTouchStart = (e: TouchEvent) => {
@@ -139,8 +146,10 @@ export const GameControls = () => {
       gl.domElement.addEventListener('touchend', handleTouchEnd)
       gl.domElement.addEventListener('touchcancel', handleTouchEnd)
     } else {
-      // Desktop: Use pointerdown for click-to-shoot
-      gl.domElement.addEventListener('pointerdown', handleClick)
+      // Desktop: Use pointer events for auto-fire (hold to shoot)
+      gl.domElement.addEventListener('pointerdown', handlePointerDown)
+      gl.domElement.addEventListener('pointerup', handlePointerUp)
+      gl.domElement.addEventListener('pointerleave', handlePointerUp)
     }
 
     return () => {
@@ -152,7 +161,9 @@ export const GameControls = () => {
         gl.domElement.removeEventListener('touchend', handleTouchEnd)
         gl.domElement.removeEventListener('touchcancel', handleTouchEnd)
       } else {
-        gl.domElement.removeEventListener('pointerdown', handleClick)
+        gl.domElement.removeEventListener('pointerdown', handlePointerDown)
+        gl.domElement.removeEventListener('pointerup', handlePointerUp)
+        gl.domElement.removeEventListener('pointerleave', handlePointerUp)
       }
 
       stopAutoFire()

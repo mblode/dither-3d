@@ -106,12 +106,7 @@ export const UI = () => {
               right: "20px",
               fontSize: "28px",
               fontWeight: "bold",
-              color:
-                speedMultiplier >= "3.0"
-                  ? "#ffff00"
-                  : speedMultiplier >= "2.0"
-                    ? "#ffaa00"
-                    : "#ffffff",
+              color: "#ffffff",
             }}
           >
             SPEED: {speedMultiplier}x
@@ -144,7 +139,7 @@ export const UI = () => {
           ) : (
             <>
               <div>Click to lock pointer</div>
-              <div>Mouse to aim, click to shoot</div>
+              <div>Hold mouse to auto-fire</div>
               <div>Dodge the asteroids!</div>
             </>
           )}
@@ -154,21 +149,6 @@ export const UI = () => {
       {/* Crosshair */}
       {!isGameOver && (
         <>
-          {/* Shot flash effect */}
-          {shotFlashActive && (
-            <div
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "100%",
-                height: "100%",
-                backgroundColor: "rgba(255,255,255,0.15)",
-                pointerEvents: "none",
-              }}
-            />
-          )}
-
           {/* Center dot */}
           <div
             style={{
@@ -267,7 +247,6 @@ export const UI = () => {
           </button>
         </div>
       )}
-
     </div>
   );
 };
