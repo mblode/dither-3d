@@ -93,8 +93,7 @@ export const UI = () => {
               position: "absolute",
               top: "20px",
               left: "20px",
-              fontSize: "28px",
-              fontWeight: "bold",
+              fontSize: "20px",
             }}
           >
             Score: {scoreRounded} | {kills} kills
@@ -104,8 +103,7 @@ export const UI = () => {
               position: "absolute",
               top: "20px",
               right: "20px",
-              fontSize: "28px",
-              fontWeight: "bold",
+              fontSize: "20px",
               color: "#ffffff",
             }}
           >
@@ -122,7 +120,7 @@ export const UI = () => {
             top: "50%",
             left: "50%",
             transform: "translate(-50%, -50%)",
-            fontSize: 30,
+            fontSize: 24,
             textAlign: "center",
             opacity: showInstructions ? 1 : 0,
             transition: "opacity 0.5s",
