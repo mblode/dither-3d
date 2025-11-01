@@ -2,10 +2,9 @@ import { useEffect, useRef, useMemo } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { useGame } from "./Game";
-import type { Asteroid } from "./Game";
+import type { Asteroid as AsteroidType } from "./Game";
 import { Explosions } from "./components/Explosion";
-import { AsteroidGeometry } from "./components/AsteroidMesh";
-import { AsteroidMaterial } from "./components/AsteroidMaterial";
+import { Asteroid } from "./components/Asteroid";
 
 const MAX_ASTEROIDS = 30;
 const SPAWN_INTERVAL_START = 1.2; // Starting spawn interval (seconds)
@@ -23,7 +22,7 @@ const VELOCITY_SCALE = 500; // Score points to increase asteroid velocity
 function createAsteroidProperties(
   id: number,
   score: number = 0,
-): Omit<Asteroid, "position"> {
+): Omit<AsteroidType, "position"> {
   // Random linear velocity with scaling based on score
   const dirX = (Math.random() - 0.5) * 2;
   const dirY = (Math.random() - 0.5) * 2;
@@ -76,7 +75,7 @@ export default function Scene() {
 
   const nextIdRef = useRef(0);
   const spawnAccumulator = useRef(0);
-  const asteroidsRef = useRef<Asteroid[]>([]);
+  const asteroidsRef = useRef<AsteroidType[]>([]);
   const initializedRef = useRef(false);
 
   // Generate static background stars once as a point cloud
@@ -121,7 +120,7 @@ export default function Scene() {
     initializedRef.current = true;
 
     // Start with some initial asteroids
-    const initialAsteroids: Asteroid[] = [];
+    const initialAsteroids: AsteroidType[] = [];
     const numInitial = 10;
     const startPos = camera.position;
 
@@ -159,9 +158,17 @@ export default function Scene() {
     setAsteroids(initialAsteroids);
   }, [isPlaying, isGameOver, setAsteroids, camera]);
 
-  // Sync ref to context when context changes (from external removal like shooting)
+  // Handle external asteroid removals (e.g., from shooting) without overwriting positions
   useEffect(() => {
-    asteroidsRef.current = asteroids;
+    const stateIds = new Set(asteroids.map(a => a.id));
+    const refIds = new Set(asteroidsRef.current.map(a => a.id));
+
+    // Only remove asteroids from ref that are no longer in state
+    // Don't touch positions of remaining asteroids
+    const removed = Array.from(refIds).filter(id => !stateIds.has(id));
+    if (removed.length > 0) {
+      asteroidsRef.current = asteroidsRef.current.filter(a => stateIds.has(a.id));
+    }
   }, [asteroids]);
 
   // Update asteroid positions and spawn new ones
@@ -291,23 +298,7 @@ export default function Scene() {
 
       {/* Dynamic asteroids - render from ref for real-time position updates */}
       {asteroidsRef.current.map((asteroid) => (
-        <mesh
-          key={asteroid.id}
-          position={asteroid.position}
-          rotation={asteroid.rotation}
-          userData={{ asteroidId: asteroid.id }}
-          castShadow
-        >
-          <AsteroidGeometry
-            radius={asteroid.radius}
-            shapeSeed={asteroid.shapeSeed}
-          />
-          <AsteroidMaterial
-            color={asteroid.color}
-            roughness={asteroid.roughness}
-            shapeSeed={asteroid.shapeSeed}
-          />
-        </mesh>
+        <Asteroid key={asteroid.id} asteroid={asteroid} />
       ))}
 
       {/* Explosion effects */}

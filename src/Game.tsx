@@ -60,6 +60,7 @@ interface GameContextType extends GameState {
   incrementKills: (speedMultiplier?: number) => void
   removeAsteroid: (id: number) => void
   addExplosion: (position: [number, number, number]) => void
+  handleAsteroidDestroyed: (asteroidId: number, explosionPos: [number, number, number], hitTime: number, speedMultiplier: number) => void
   setAsteroids: (asteroids: Asteroid[]) => void
   setExplosions: (explosions: Explosion[]) => void
   setCameraPosition: (pos: [number, number, number]) => void
@@ -181,6 +182,30 @@ export const GameProvider = ({ children }: GameProviderProps) => {
     }))
   }, [])
 
+  // Batched update for asteroid destruction - combines multiple state updates into one
+  const handleAsteroidDestroyed = useCallback((
+    asteroidId: number,
+    explosionPos: [number, number, number],
+    hitTime: number,
+    speedMultiplier: number
+  ) => {
+    const points = Math.floor(POINTS_PER_KILL * speedMultiplier)
+    const explosion: Explosion = {
+      id: Date.now() + Math.random(),
+      position: explosionPos,
+      startTime: hitTime,
+    }
+
+    setGameState((prev) => ({
+      ...prev,
+      asteroids: prev.asteroids.filter((asteroid) => asteroid.id !== asteroidId),
+      explosions: [...prev.explosions, explosion],
+      lastHitTime: hitTime,
+      kills: prev.kills + 1,
+      score: prev.score + points,
+    }))
+  }, [])
+
   return (
     <GameContext.Provider
       value={{
@@ -192,6 +217,7 @@ export const GameProvider = ({ children }: GameProviderProps) => {
         incrementKills,
         removeAsteroid,
         addExplosion,
+        handleAsteroidDestroyed,
         setAsteroids,
         setExplosions,
         setCameraPosition,

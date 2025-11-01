@@ -18,7 +18,7 @@ const PLAYER_COLLISION_RADIUS = 0.5 // Player collision sphere radius
 
 export const GameControls = () => {
   const { camera, scene, gl } = useThree()
-  const { isPlaying, isGameOver, distance, updateDistance, endGame, startGame, asteroids, incrementKills, removeAsteroid, setCameraPosition, addExplosion, setLastShotTime, setLastHitTime, updateScore, score } = useGame()
+  const { isPlaying, isGameOver, distance, updateDistance, endGame, startGame, asteroids, setCameraPosition, handleAsteroidDestroyed, setLastShotTime, updateScore, score } = useGame()
 
   const keysPressed = useRef<{ [key: string]: boolean }>({})
   const lastShotTime = useRef<number>(0)
@@ -69,13 +69,13 @@ export const GameControls = () => {
       const currentSpeed = Math.min(MAX_SPEED, BASE_SPEED * Math.pow(SPEED_SCALE_MULTIPLIER, speedTier))
       const speedMultiplier = currentSpeed / BASE_SPEED
 
-      // Create explosion at hit position
-      addExplosion([hitPosition.x, hitPosition.y, hitPosition.z])
-      setLastHitTime(now)
-
-      // Remove asteroid
-      removeAsteroid(asteroidId)
-      incrementKills(speedMultiplier)
+      // Handle asteroid destruction with batched state update
+      handleAsteroidDestroyed(
+        asteroidId,
+        [hitPosition.x, hitPosition.y, hitPosition.z],
+        now,
+        speedMultiplier
+      )
     }
   }
 
@@ -179,7 +179,7 @@ export const GameControls = () => {
 
       stopAutoFire()
     }
-  }, [isPlaying, isGameOver, startGame, camera, incrementKills, removeAsteroid, addExplosion, setLastShotTime, setLastHitTime, scene, gl])
+  }, [isPlaying, isGameOver, startGame, camera, handleAsteroidDestroyed, setLastShotTime, scene, gl])
 
   // Reset game state when restarting
   useEffect(() => {
