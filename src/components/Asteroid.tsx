@@ -1,7 +1,7 @@
-import { memo } from 'react';
-import type { Asteroid as AsteroidType } from '../Game';
-import { AsteroidGeometry } from './AsteroidMesh';
-import { AsteroidMaterial } from './AsteroidMaterial';
+import { memo } from "react";
+import type { Asteroid as AsteroidType } from "../Game";
+import { AsteroidMaterial } from "./AsteroidMaterial";
+import { AsteroidGeometry } from "./AsteroidMesh";
 
 interface AsteroidProps {
   asteroid: AsteroidType;

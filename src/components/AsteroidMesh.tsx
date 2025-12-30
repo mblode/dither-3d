@@ -16,7 +16,8 @@ class SeededRandom {
   }
 
   next(): number {
-    let t = (this.state += 0x6d2b79f5);
+    this.state += 0x6d2b79f5;
+    let t = this.state;
     t = Math.imul(t ^ (t >>> 15), t | 1);
     t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
@@ -25,15 +26,12 @@ class SeededRandom {
 
 // Simple 3D Perlin-like noise using interpolated random values
 class Noise3D {
-  private rng: SeededRandom;
-
-  constructor(seed: number) {
-    this.rng = new SeededRandom(seed);
-  }
-
   // Hash function for 3D coordinates
   private hash(x: number, y: number, z: number): number {
-    const n = Math.floor(x) * 374761393 + Math.floor(y) * 668265263 + Math.floor(z) * 2147483647;
+    const n =
+      Math.floor(x) * 374761393 +
+      Math.floor(y) * 668265263 +
+      Math.floor(z) * 2147483647;
     return Math.abs(n) % 1000000;
   }
 
@@ -89,7 +87,8 @@ class Noise3D {
     let maxValue = 0;
 
     for (let i = 0; i < octaves; i++) {
-      value += this.noise(x * frequency, y * frequency, z * frequency) * amplitude;
+      value +=
+        this.noise(x * frequency, y * frequency, z * frequency) * amplitude;
       maxValue += amplitude;
       amplitude *= 0.5;
       frequency *= 2;
@@ -105,7 +104,7 @@ export const AsteroidGeometry = ({
 }: AsteroidGeometryProps) => {
   const geometry = useMemo(() => {
     const rng = new SeededRandom(shapeSeed);
-    const noise = new Noise3D(shapeSeed);
+    const noise = new Noise3D();
 
     // Use seed to pick base geometry type (weighted toward icosahedron)
     const typeRand = rng.next();
@@ -138,7 +137,13 @@ export const AsteroidGeometry = ({
     // Generate random craters - both large impacts and small pockmarks
     const numLargeCraters = Math.floor(4 + rng.next() * 6); // 4-9 large craters
     const numSmallCraters = Math.floor(8 + rng.next() * 12); // 8-19 small pockmarks
-    const craters: { x: number; y: number; z: number; radius: number; depth: number }[] = [];
+    const craters: {
+      x: number;
+      y: number;
+      z: number;
+      radius: number;
+      depth: number;
+    }[] = [];
 
     // Large impact craters
     for (let i = 0; i < numLargeCraters; i++) {
@@ -187,11 +192,20 @@ export const AsteroidGeometry = ({
 
       // Multi-octave noise displacement for rough, rocky surface texture
       const noiseScale = 3.0; // Base frequency for large features
-      const noiseValue = noise.octaveNoise(x / radius * noiseScale, y / radius * noiseScale, z / radius * noiseScale, 5);
+      const noiseValue = noise.octaveNoise(
+        (x / radius) * noiseScale,
+        (y / radius) * noiseScale,
+        (z / radius) * noiseScale,
+        5,
+      );
 
       // Add high-frequency detail noise for spotty, bumpy texture
       const detailScale = 8.0; // Very high frequency for fine bumps
-      const detailNoise = noise.noise(x / radius * detailScale, y / radius * detailScale, z / radius * detailScale);
+      const detailNoise = noise.noise(
+        (x / radius) * detailScale,
+        (y / radius) * detailScale,
+        (z / radius) * detailScale,
+      );
 
       // Combine base noise and detail noise
       const combinedNoise = noiseValue * 0.75 + detailNoise * 0.25; // 75% large features, 25% fine detail
@@ -209,7 +223,8 @@ export const AsteroidGeometry = ({
 
         if (dist < crater.radius) {
           // Smooth crater falloff using cosine
-          const falloff = (Math.cos((dist / crater.radius) * Math.PI) + 1) * 0.5;
+          const falloff =
+            (Math.cos((dist / crater.radius) * Math.PI) + 1) * 0.5;
           craterDisplacement -= crater.depth * falloff;
         }
       }
@@ -222,7 +237,7 @@ export const AsteroidGeometry = ({
         i,
         x + nx * totalDisplacement,
         y + ny * totalDisplacement,
-        z + nz * totalDisplacement
+        z + nz * totalDisplacement,
       );
     }
 

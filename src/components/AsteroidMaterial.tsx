@@ -13,7 +13,7 @@ function hash2D(x: number, y: number, seed: number): number {
   let h = seed + x * 374761393 + y * 668265263;
   h = (h ^ (h >>> 13)) * 1274126177;
   h = h ^ (h >>> 16);
-  return ((h >>> 0) / 4294967296); // Normalize to 0-1
+  return (h >>> 0) / 4294967296; // Normalize to 0-1
 }
 
 // Interpolate function for smooth noise
@@ -53,7 +53,8 @@ function generateAsteroidTexture(seed: number): THREE.Texture {
   const canvas = document.createElement("canvas");
   canvas.width = size;
   canvas.height = size;
-  const ctx = canvas.getContext("2d")!;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Failed to get 2d context");
 
   // Fill base color (bright gray)
   ctx.fillStyle = "#c0c0c0";
@@ -165,7 +166,8 @@ function generateNormalMap(seed: number): THREE.Texture {
   const canvas = document.createElement("canvas");
   canvas.width = size;
   canvas.height = size;
-  const ctx = canvas.getContext("2d")!;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Failed to get 2d context");
 
   const imageData = ctx.getImageData(0, 0, size, size);
   const data = imageData.data;

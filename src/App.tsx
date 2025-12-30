@@ -1,10 +1,10 @@
 import { Canvas } from "@react-three/fiber";
-import Scene from "./Scene";
-import Effects from "./components/Effects";
-import { GameProvider, INITIAL_CAMERA_POSITION } from "./Game";
-import { GameControls } from "./components/GameControls";
 import { CameraControls } from "./components/CameraControls";
+import Effects from "./components/Effects";
+import { GameControls } from "./components/GameControls";
 import { UI } from "./components/UI";
+import { GameProvider, INITIAL_CAMERA_POSITION } from "./Game";
+import Scene from "./Scene";
 
 export default function App() {
   return (

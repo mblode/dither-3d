@@ -1,10 +1,10 @@
-import { useEffect, useRef, useMemo } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import * as THREE from "three";
-import { useGame } from "./Game";
-import type { Asteroid as AsteroidType } from "./Game";
-import { Explosions } from "./components/Explosion";
+import { useEffect, useMemo, useRef } from "react";
+import type * as THREE from "three";
 import { Asteroid } from "./components/Asteroid";
+import { Explosions } from "./components/Explosion";
+import type { Asteroid as AsteroidType } from "./Game";
+import { useGame } from "./Game";
 
 const MAX_ASTEROIDS = 30;
 const SPAWN_INTERVAL_START = 1.2; // Starting spawn interval (seconds)
@@ -160,14 +160,16 @@ export default function Scene() {
 
   // Handle external asteroid removals (e.g., from shooting) without overwriting positions
   useEffect(() => {
-    const stateIds = new Set(asteroids.map(a => a.id));
-    const refIds = new Set(asteroidsRef.current.map(a => a.id));
+    const stateIds = new Set(asteroids.map((a) => a.id));
+    const refIds = new Set(asteroidsRef.current.map((a) => a.id));
 
     // Only remove asteroids from ref that are no longer in state
     // Don't touch positions of remaining asteroids
-    const removed = Array.from(refIds).filter(id => !stateIds.has(id));
+    const removed = Array.from(refIds).filter((id) => !stateIds.has(id));
     if (removed.length > 0) {
-      asteroidsRef.current = asteroidsRef.current.filter(a => stateIds.has(a.id));
+      asteroidsRef.current = asteroidsRef.current.filter((a) =>
+        stateIds.has(a.id),
+      );
     }
   }, [asteroids]);
 

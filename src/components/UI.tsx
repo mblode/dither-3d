@@ -8,15 +8,8 @@ const SHOT_FLASH_DURATION_MS = 100; // Duration of white flash when shooting
 const HIT_INDICATOR_DURATION_MS = 150; // Duration of red crosshair when hitting target
 
 export const UI = () => {
-  const {
-    distance,
-    kills,
-    score,
-    isGameOver,
-    startGame,
-    lastShotTime,
-    lastHitTime,
-  } = useGame();
+  const { kills, score, isGameOver, startGame, lastShotTime, lastHitTime } =
+    useGame();
   const [showInstructions, setShowInstructions] = useState(true);
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [isMobile, setIsMobile] = useState(false);
@@ -49,7 +42,6 @@ export const UI = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const distanceMeters = Math.floor(distance);
   const scoreRounded = Math.floor(score);
 
   // Calculate speed multiplier (same formula as GameControls)
@@ -60,7 +52,7 @@ export const UI = () => {
   const speedTier = Math.max(0, score) / SPEED_SCALE_POINTS;
   const scaledSpeed = Math.min(
     MAX_SPEED,
-    BASE_SPEED * Math.pow(SPEED_SCALE_MULTIPLIER, speedTier),
+    BASE_SPEED * SPEED_SCALE_MULTIPLIER ** speedTier,
   );
   const speedMultiplier = (scaledSpeed / BASE_SPEED).toFixed(1);
 
@@ -218,6 +210,7 @@ export const UI = () => {
             Kills: {kills}
           </div>
           <button
+            type="button"
             onClick={startGame}
             style={{
               pointerEvents: "all",
