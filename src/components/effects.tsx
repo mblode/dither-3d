@@ -1,5 +1,5 @@
 import { EffectComposer } from "@react-three/postprocessing";
-import DitherEffect from "./DitherEffect";
+import DitherEffect from "./dither-effect";
 
 interface EffectsProps {
   patternScale: number;
@@ -16,8 +16,8 @@ export default function Effects({
     <EffectComposer>
       <DitherEffect
         patternScale={patternScale}
-        threshold={threshold}
         pixelSize={pixelSize}
+        threshold={threshold}
       />
     </EffectComposer>
   );

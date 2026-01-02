@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useGame } from "../Game";
+import { useGame } from "../game";
 
 // UI timing constants
 const INSTRUCTIONS_DISPLAY_MS = 4000; // How long to show instructions before fading
@@ -52,7 +52,7 @@ export const UI = () => {
   const speedTier = Math.max(0, score) / SPEED_SCALE_POINTS;
   const scaledSpeed = Math.min(
     MAX_SPEED,
-    BASE_SPEED * SPEED_SCALE_MULTIPLIER ** speedTier,
+    BASE_SPEED * SPEED_SCALE_MULTIPLIER ** speedTier
   );
   const speedMultiplier = (scaledSpeed / BASE_SPEED).toFixed(1);
 
@@ -210,8 +210,16 @@ export const UI = () => {
             Kills: {kills}
           </div>
           <button
-            type="button"
             onClick={startGame}
+            onPointerDown={(e) => {
+              e.currentTarget.style.backgroundColor = "#cccccc";
+            }}
+            onPointerLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "#ffffff";
+            }}
+            onPointerUp={(e) => {
+              e.currentTarget.style.backgroundColor = "#ffffff";
+            }}
             style={{
               pointerEvents: "all",
               fontSize: isMobile ? "20px" : "24px",
@@ -224,15 +232,7 @@ export const UI = () => {
               fontWeight: "bold",
               touchAction: "manipulation",
             }}
-            onPointerDown={(e) => {
-              e.currentTarget.style.backgroundColor = "#cccccc";
-            }}
-            onPointerUp={(e) => {
-              e.currentTarget.style.backgroundColor = "#ffffff";
-            }}
-            onPointerLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "#ffffff";
-            }}
+            type="button"
           >
             RESTART
           </button>

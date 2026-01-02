@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Shader Test</title>
-</head>
-<body>
-  <pre id="output"></pre>
-  <script type="module">
-    import fragmentShader from './src/shaders/dither.frag?raw'
+  <head>
+    <title>Shader Test</title>
+  </head>
+  <body>
+    <pre id="output"></pre>
+    <script type="module">
+    import fragmentShader from "./src/shaders/dither.frag?raw";
 
-    const output = document.getElementById('output')
-    output.textContent = `Fragment Shader:\n\n${fragmentShader}`
-  </script>
-</body>
+    const output = document.getElementById("output");
+    output.textContent = `Fragment Shader:\n\n${fragmentShader}`;
+    </script>
+  </body>
 </html>

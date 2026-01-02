@@ -1,7 +1,7 @@
 import { useFrame } from "@react-three/fiber";
 import { useMemo } from "react";
-import type { Explosion as ExplosionType } from "../Game";
-import { useGame } from "../Game";
+import type { Explosion as ExplosionType } from "../game";
+import { useGame } from "../game";
 
 // Explosion constants
 const EXPLOSION_DURATION_MS = 600; // Milliseconds before explosion fragments are removed
@@ -40,7 +40,7 @@ export const Explosions = () => {
   return (
     <>
       {explosions.map((explosion) => (
-        <ExplosionEffect key={explosion.id} explosion={explosion} />
+        <ExplosionEffect explosion={explosion} key={explosion.id} />
       ))}
     </>
   );
@@ -92,7 +92,7 @@ const ExplosionEffect = ({ explosion }: ExplosionEffectProps) => {
 
   // Update fragment positions
   useFrame((_, delta) => {
-    fragments.forEach((frag) => {
+    for (const frag of fragments) {
       frag.position[0] += frag.velocity[0] * delta;
       frag.position[1] += frag.velocity[1] * delta;
       frag.position[2] += frag.velocity[2] * delta;
@@ -105,7 +105,7 @@ const ExplosionEffect = ({ explosion }: ExplosionEffectProps) => {
       frag.velocity[0] *= FRAGMENT_VELOCITY_DECAY;
       frag.velocity[1] *= FRAGMENT_VELOCITY_DECAY;
       frag.velocity[2] *= FRAGMENT_VELOCITY_DECAY;
-    });
+    }
   });
 
   // Calculate opacity based on age
@@ -125,9 +125,9 @@ const ExplosionEffect = ({ explosion }: ExplosionEffectProps) => {
           <boxGeometry args={[1, 1, 1]} />
           <meshStandardMaterial
             color="#ffffff"
-            roughness={0.5}
             metalness={0.2}
             opacity={opacity}
+            roughness={0.5}
             transparent
           />
         </mesh>

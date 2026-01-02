@@ -22,7 +22,7 @@ class DitherEffectImpl extends Effect {
     patternScale: number,
     threshold: number,
     pixelSize: number,
-    resolution: Vector2,
+    resolution: Vector2
   ) {
     // Set up texture wrapping for tiling
     blueNoiseTexture.wrapS = RepeatWrapping;
@@ -47,34 +47,40 @@ class DitherEffectImpl extends Effect {
     this.cameraRef = camera;
   }
 
-  private cameraRef: Camera;
+  private readonly cameraRef: Camera;
 
   update(
     _renderer: WebGLRenderer,
     inputBuffer: WebGLRenderTarget,
-    _deltaTime: number,
+    _deltaTime: number
   ) {
     // Update camera uniforms each frame
     if (this.cameraRef) {
       const cameraPos = this.uniforms.get("cameraPosition");
       const cameraWorldMatrix = this.uniforms.get("cameraWorldMatrix");
       const cameraProjectionMatrixInverse = this.uniforms.get(
-        "cameraProjectionMatrixInverse",
+        "cameraProjectionMatrixInverse"
       );
 
-      if (cameraPos) cameraPos.value.copy(this.cameraRef.position);
-      if (cameraWorldMatrix)
+      if (cameraPos) {
+        cameraPos.value.copy(this.cameraRef.position);
+      }
+      if (cameraWorldMatrix) {
         cameraWorldMatrix.value = this.cameraRef.matrixWorld;
-      if (cameraProjectionMatrixInverse)
+      }
+      if (cameraProjectionMatrixInverse) {
         cameraProjectionMatrixInverse.value =
           this.cameraRef.projectionMatrixInverse;
+      }
     }
 
     // Update resolution uniform
     const width = inputBuffer.width;
     const height = inputBuffer.height;
     const resolution = this.uniforms.get("resolution");
-    if (resolution) resolution.value.set(width, height);
+    if (resolution) {
+      resolution.value.set(width, height);
+    }
   }
 }
 
@@ -105,7 +111,7 @@ const DitherEffect = forwardRef<typeof DitherEffectImpl, DitherEffectProps>(
         patternScale,
         threshold,
         pixelSize,
-        resolution,
+        resolution
       );
     }, [blueNoiseTexture, camera, patternScale, threshold, pixelSize, size]);
 
@@ -116,14 +122,20 @@ const DitherEffect = forwardRef<typeof DitherEffectImpl, DitherEffectProps>(
         const thresholdUniform = effect.uniforms.get("threshold");
         const pixelSizeUniform = effect.uniforms.get("pixelSize");
 
-        if (patternScaleUniform) patternScaleUniform.value = patternScale;
-        if (thresholdUniform) thresholdUniform.value = threshold;
-        if (pixelSizeUniform) pixelSizeUniform.value = pixelSize;
+        if (patternScaleUniform) {
+          patternScaleUniform.value = patternScale;
+        }
+        if (thresholdUniform) {
+          thresholdUniform.value = threshold;
+        }
+        if (pixelSizeUniform) {
+          pixelSizeUniform.value = pixelSize;
+        }
       }
     }, [effect, patternScale, threshold, pixelSize]);
 
-    return <primitive ref={ref} object={effect} dispose={null} />;
-  },
+    return <primitive dispose={null} object={effect} ref={ref} />;
+  }
 );
 
 DitherEffect.displayName = "DitherEffect";

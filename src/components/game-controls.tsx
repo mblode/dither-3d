@@ -1,7 +1,7 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useCallback, useEffect, useRef } from "react";
 import { type Object3D, Raycaster, Vector2, Vector3 } from "three";
-import { INITIAL_CAMERA_POSITION, useGame } from "../Game";
+import { INITIAL_CAMERA_POSITION, useGame } from "../game";
 
 // Movement constants
 const BASE_SPEED = 30; // Starting forward speed (units per second)
@@ -34,7 +34,7 @@ export const GameControls = () => {
   const keysPressed = useRef<{ [key: string]: boolean }>({});
   const lastShotTime = useRef<number>(0);
   const startPosition = useRef<Vector3>(
-    new Vector3(...INITIAL_CAMERA_POSITION),
+    new Vector3(...INITIAL_CAMERA_POSITION)
   );
   const isTouching = useRef<boolean>(false);
   const autoFireInterval = useRef<number | null>(null);
@@ -47,11 +47,15 @@ export const GameControls = () => {
 
   // Extract shoot logic into reusable function
   const shootRaycast = useCallback(() => {
-    if (!isPlaying) return;
+    if (!isPlaying) {
+      return;
+    }
 
     const now = Date.now();
 
-    if (now - lastShotTime.current < SHOT_COOLDOWN_MS) return;
+    if (now - lastShotTime.current < SHOT_COOLDOWN_MS) {
+      return;
+    }
     lastShotTime.current = now;
     setLastShotTime(now);
 
@@ -67,7 +71,9 @@ export const GameControls = () => {
       }
     });
 
-    if (asteroidMeshes.length === 0) return;
+    if (asteroidMeshes.length === 0) {
+      return;
+    }
 
     const intersects = raycaster.intersectObjects(asteroidMeshes, false);
 
@@ -81,7 +87,7 @@ export const GameControls = () => {
       const speedTier = Math.max(0, scoreRef.current) / SPEED_SCALE_POINTS;
       const currentSpeed = Math.min(
         MAX_SPEED,
-        BASE_SPEED * SPEED_SCALE_MULTIPLIER ** speedTier,
+        BASE_SPEED * SPEED_SCALE_MULTIPLIER ** speedTier
       );
       const speedMultiplier = currentSpeed / BASE_SPEED;
 
@@ -90,14 +96,16 @@ export const GameControls = () => {
         asteroidId,
         [hitPosition.x, hitPosition.y, hitPosition.z],
         now,
-        speedMultiplier,
+        speedMultiplier
       );
     }
   }, [isPlaying, camera, scene, setLastShotTime, handleAsteroidDestroyed]);
 
   // Auto-fire management
   const startAutoFire = useCallback(() => {
-    if (autoFireInterval.current !== null) return;
+    if (autoFireInterval.current !== null) {
+      return;
+    }
 
     // Fire immediately on touch start
     shootRaycast();
@@ -149,7 +157,9 @@ export const GameControls = () => {
     };
 
     const handleTouchStart = (e: TouchEvent) => {
-      if (isGameOver) return;
+      if (isGameOver) {
+        return;
+      }
       // Prevent pointerdown from also firing
       e.preventDefault();
       isTouching.current = true;
@@ -209,13 +219,15 @@ export const GameControls = () => {
   }, [isPlaying, isGameOver, camera]);
 
   useFrame((_, delta) => {
-    if (!isPlaying) return;
+    if (!isPlaying) {
+      return;
+    }
 
     // Progressive speed system - gets faster as score increases
     const speedTier = Math.max(0, score) / SPEED_SCALE_POINTS;
     const currentSpeed = Math.min(
       MAX_SPEED,
-      BASE_SPEED * SPEED_SCALE_MULTIPLIER ** speedTier,
+      BASE_SPEED * SPEED_SCALE_MULTIPLIER ** speedTier
     );
 
     // Get camera forward direction

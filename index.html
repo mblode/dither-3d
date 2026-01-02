@@ -2,66 +2,93 @@
 <html lang="en">
   <head>
     <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-EMLVERXBPE"></script>
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-EMLVERXBPE"
+    ></script>
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+    "use strict";
+    window.dataLayer = window.dataLayer || [];
+    function gtag(...args) {
+      window.dataLayer.push(...args);
+    }
+    gtag("js", new Date());
 
-      gtag('config', 'G-EMLVERXBPE');
+    gtag("config", "G-EMLVERXBPE");
     </script>
 
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="description" content="A retro-styled 3D space shooter with Return of the Obra Dinn inspired dithered graphics. Dodge asteroids, shoot to survive, and rack up high scores as speed increases!" />
+    <meta charset="UTF-8">
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    >
+    <meta
+      name="description"
+      content="A retro-styled 3D space shooter with Return of the Obra Dinn inspired dithered graphics. Dodge asteroids, shoot to survive, and rack up high scores as speed increases!"
+    >
     <title>Dither Asteroids - Retro 3D Space Shooter Game</title>
 
     <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="Dither Asteroids - Retro 3D Space Shooter Game" />
-    <meta property="og:description" content="A retro-styled 3D space shooter with Return of the Obra Dinn inspired dithered graphics. Dodge asteroids, shoot to survive, and rack up high scores as speed increases!" />
-    <meta property="og:image" content="/opengraph-image.png" />
+    <meta property="og:type" content="website">
+    <meta
+      property="og:title"
+      content="Dither Asteroids - Retro 3D Space Shooter Game"
+    >
+    <meta
+      property="og:description"
+      content="A retro-styled 3D space shooter with Return of the Obra Dinn inspired dithered graphics. Dodge asteroids, shoot to survive, and rack up high scores as speed increases!"
+    >
+    <meta property="og:image" content="/opengraph-image.png">
 
     <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:title" content="Dither Asteroids - Retro 3D Space Shooter Game" />
-    <meta property="twitter:description" content="A retro-styled 3D space shooter with Return of the Obra Dinn inspired dithered graphics. Dodge asteroids, shoot to survive, and rack up high scores as speed increases!" />
-    <meta property="twitter:image" content="/opengraph-image.png" />
+    <meta property="twitter:card" content="summary_large_image">
+    <meta
+      property="twitter:title"
+      content="Dither Asteroids - Retro 3D Space Shooter Game"
+    >
+    <meta
+      property="twitter:description"
+      content="A retro-styled 3D space shooter with Return of the Obra Dinn inspired dithered graphics. Dodge asteroids, shoot to survive, and rack up high scores as speed increases!"
+    >
+    <meta property="twitter:image" content="/opengraph-image.png">
     <link rel="icon" href="/favicon.ico" sizes="32x32">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <link rel="manifest" href="/site.webmanifest">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <link
+      href="https://fonts.googleapis.com/css2?family=VT323&display=swap"
+      rel="stylesheet"
+    >
     <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-      body {
-        width: 100vw;
-        height: 100vh;
-        overflow: hidden;
-        font-family: "VT323", monospace;
-        background: #000;
-        touch-action: none;
-        -webkit-user-select: none;
-        user-select: none;
-        -webkit-tap-highlight-color: transparent;
-      }
+    body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      font-family: "VT323", monospace;
+      background: #000;
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-      #root {
-        width: 100%;
-        height: 100%;
-      }
+    #root {
+      width: 100%;
+      height: 100%;
+    }
 
-      canvas {
-        display: block;
-        touch-action: none;
-      }
+    canvas {
+      display: block;
+      touch-action: none;
+    }
     </style>
   </head>
   <body>
