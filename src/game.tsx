@@ -10,8 +10,6 @@ import {
 export const INITIAL_CAMERA_POSITION: [number, number, number] = [0, 0, 10];
 export const POINTS_PER_KILL = 100;
 
-export type DisplayMode = "DIGITAL" | "ANALOG";
-
 const INITIAL_GAME_STATE = {
   isPlaying: true,
   isGameOver: false,

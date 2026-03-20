@@ -4,7 +4,6 @@ import { CameraControls } from "./components/camera-controls";
 import Effects from "./components/effects";
 import { GameControls } from "./components/game-controls";
 import { UI } from "./components/ui";
-import type { DisplayMode } from "./game";
 import { GameProvider, INITIAL_CAMERA_POSITION } from "./game";
 import Scene from "./scene";
 
@@ -12,32 +11,6 @@ import Scene from "./scene";
 const INTERNAL_WIDTH = 800;
 
 function GameCanvas() {
-  // Auto-select display mode:
-  // - Mobile: always ANALOG (effectively fullscreen, softened output reduces discomfort)
-  // - Desktop fullscreen: ANALOG (sphere-mapped dither, softened output)
-  // - Desktop windowed: DIGITAL (border-boxed, screenspace offset dither, 1-bit output)
-  const [displayMode, setDisplayMode] = useState<DisplayMode>(() => {
-    const isMobile = "ontouchstart" in window || navigator.maxTouchPoints > 0;
-    if (isMobile) {
-      return "ANALOG";
-    }
-    return document.fullscreenElement ? "ANALOG" : "DIGITAL";
-  });
-
-  useEffect(() => {
-    const isMobile = "ontouchstart" in window || navigator.maxTouchPoints > 0;
-    if (isMobile) {
-      return;
-    }
-
-    const onFullscreenChange = () => {
-      setDisplayMode(document.fullscreenElement ? "ANALOG" : "DIGITAL");
-    };
-    document.addEventListener("fullscreenchange", onFullscreenChange);
-    return () =>
-      document.removeEventListener("fullscreenchange", onFullscreenChange);
-  }, []);
-
   // Compute dpr to achieve ~800px wide internal rendering resolution
   // This preserves the low-res pixelated style at any screen size
   const [renderDpr, setRenderDpr] = useState(1);
@@ -95,11 +68,7 @@ function GameCanvas() {
         <GameControls />
 
         {/* Post-processing with dither effect */}
-        <Effects
-          displayMode={displayMode}
-          patternScale={12.0}
-          threshold={0.5}
-        />
+        <Effects patternScale={12.0} threshold={0.5} />
       </Canvas>
     </div>
   );
