@@ -5,6 +5,8 @@ uniform float patternScale;
 uniform float threshold;
 uniform float pixelSize;
 uniform vec2 resolution;
+uniform int ditherMode; // 0 = DIGITAL (screen offset), 1 = ANALOG (sphere mapped)
+uniform vec2 ditherOffset; // Pixel offset for DIGITAL mode screen-space tracking
 
 // Convert sRGB to linear RGB
 vec3 sRGBToLinear(vec3 srgb) {
@@ -28,6 +30,17 @@ vec2 directionToSphericalUV(vec3 dir) {
   return uv;
 }
 
+// Sphere-mapped blue noise sample at a given screen UV
+float sphereDitherSample(vec2 sampleUV) {
+  vec4 clip = vec4(sampleUV * 2.0 - 1.0, 0.0, 1.0);
+  vec4 view = cameraProjectionMatrixInverse * clip;
+  view.xyz /= view.w;
+  vec3 worldDir = normalize((cameraWorldMatrix * vec4(view.xyz, 0.0)).xyz);
+  vec2 sphereUV = directionToSphericalUV(worldDir);
+  vec2 tiledUV = fract(sphereUV * patternScale);
+  return texture2D(tBlueNoise, tiledUV).r;
+}
+
 void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor) {
   // Apply pixelation effect (low-res chunky look)
   vec2 pixelatedUV = uv;
@@ -36,38 +49,74 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
     pixelatedUV = floor(uv * pixelCount) / pixelCount;
   }
 
-  // Reconstruct view direction from pixelated UV
-  vec4 clip = vec4(pixelatedUV * 2.0 - 1.0, 0.0, 1.0);
-  vec4 view = cameraProjectionMatrixInverse * clip;
-  view.xyz /= view.w;
-
-  // Transform to world space
-  vec3 worldDir = normalize((cameraWorldMatrix * vec4(view.xyz, 0.0)).xyz);
-
-  // Project onto sphere and get UV coordinates (Obra Dinn technique)
-  vec2 sphereUV = directionToSphericalUV(worldDir);
-  vec2 tiledUV = fract(sphereUV * patternScale);
-
-  // Sample blue noise
-  float noise = texture2D(tBlueNoise, tiledUV).r;
-
   // Calculate luminance
   float luma = dot(inputColor.rgb, vec3(0.299, 0.587, 0.114));
 
   // Apply threshold adjustment
   float adjustedLuma = clamp(luma + threshold - 0.5, 0.0, 1.0);
 
-  // Strict binary dithering - pure 1-bit output (no gradients)
-  float dithered = step(noise, adjustedLuma);
-
   // Custom colors: #333319 (dark gray-green) and #ffffff (white)
-  // Convert from sRGB hex values to linear RGB for proper rendering
-  vec3 darkColorSRGB = vec3(51.0/255.0, 51.0/255.0, 25.0/255.0);  // #333319 in sRGB
+  vec3 darkColorSRGB = vec3(51.0/255.0, 51.0/255.0, 25.0/255.0);
   vec3 darkColor = sRGBToLinear(darkColorSRGB);
-  vec3 lightColor = vec3(1.0, 1.0, 1.0);  // #ffffff (white)
+  vec3 lightColor = vec3(1.0, 1.0, 1.0);
 
-  // Binary output - either dark or light, no in-between
+  float dithered;
+
+  if (ditherMode == 0) {
+    // DIGITAL MODE: Screen-mapped dither with camera rotation offset
+    // Pattern tiles 1:1 with screen pixels, shifted by ditherOffset
+    // Formula: DitherOffset = ScreenSize * CameraRotation / CameraFov
+    vec2 pixelCoord = pixelatedUV * resolution;
+    vec2 offsetCoord = pixelCoord + ditherOffset;
+
+    // Tile the blue noise 1:1 with pixels (128x128 texture)
+    float noise = texture2D(tBlueNoise, fract(offsetCoord / 128.0)).r;
+
+    // Pure 1-bit output
+    dithered = step(noise, adjustedLuma);
+
+    // Border-box: black bars to enforce 16:9 aspect ratio
+    float targetAspect = 16.0 / 9.0;
+    float screenAspect = resolution.x / resolution.y;
+
+    if (screenAspect > targetAspect) {
+      // Wider than 16:9 - pillarbox (black bars on sides)
+      float boxWidth = targetAspect / screenAspect;
+      float border = (1.0 - boxWidth) * 0.5;
+      if (uv.x < border || uv.x > 1.0 - border) {
+        outputColor = vec4(vec3(0.0), 1.0);
+        return;
+      }
+    } else if (screenAspect < targetAspect) {
+      // Taller than 16:9 - letterbox (black bars top/bottom)
+      float boxHeight = screenAspect / targetAspect;
+      float border = (1.0 - boxHeight) * 0.5;
+      if (uv.y < border || uv.y > 1.0 - border) {
+        outputColor = vec4(vec3(0.0), 1.0);
+        return;
+      }
+    }
+
+  } else {
+    // ANALOG MODE: Sphere-mapped dither with 2x2 supersampling
+    // Samples at 2x resolution and box-downsamples for softened output
+    vec2 halfPixel = 0.5 / resolution;
+
+    float n00 = sphereDitherSample(pixelatedUV + vec2(-halfPixel.x, -halfPixel.y));
+    float n10 = sphereDitherSample(pixelatedUV + vec2( halfPixel.x, -halfPixel.y));
+    float n01 = sphereDitherSample(pixelatedUV + vec2(-halfPixel.x,  halfPixel.y));
+    float n11 = sphereDitherSample(pixelatedUV + vec2( halfPixel.x,  halfPixel.y));
+
+    // Threshold each supersample independently
+    float d00 = step(n00, adjustedLuma);
+    float d10 = step(n10, adjustedLuma);
+    float d01 = step(n01, adjustedLuma);
+    float d11 = step(n11, adjustedLuma);
+
+    // Box downsample: average gives softened (non-1-bit) output
+    dithered = (d00 + d10 + d01 + d11) * 0.25;
+  }
+
   vec3 finalColor = mix(darkColor, lightColor, dithered);
-
   outputColor = vec4(finalColor, 1.0);
 }

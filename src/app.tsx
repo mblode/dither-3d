@@ -3,13 +3,20 @@ import { CameraControls } from "./components/camera-controls";
 import Effects from "./components/effects";
 import { GameControls } from "./components/game-controls";
 import { UI } from "./components/ui";
-import { GameProvider, INITIAL_CAMERA_POSITION } from "./game";
+import { GameProvider, INITIAL_CAMERA_POSITION, useGame } from "./game";
 import Scene from "./scene";
 
-export default function App() {
+function GameCanvas() {
+  const { displayMode } = useGame();
+
   return (
-    <GameProvider>
-      <UI />
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        backgroundColor: "#000000",
+      }}
+    >
       <Canvas
         camera={{
           position: INITIAL_CAMERA_POSITION,
@@ -45,8 +52,21 @@ export default function App() {
         <GameControls />
 
         {/* Post-processing with dither effect */}
-        <Effects patternScale={12.0} threshold={0.5} />
+        <Effects
+          displayMode={displayMode}
+          patternScale={12.0}
+          threshold={0.5}
+        />
       </Canvas>
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <GameProvider>
+      <UI />
+      <GameCanvas />
     </GameProvider>
   );
 }

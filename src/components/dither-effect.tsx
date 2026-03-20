@@ -3,6 +3,8 @@ import { Effect } from "postprocessing";
 import { forwardRef, useMemo } from "react";
 import {
   type Camera,
+  Euler,
+  type PerspectiveCamera,
   RepeatWrapping,
   type Texture,
   TextureLoader,
@@ -22,7 +24,8 @@ class DitherEffectImpl extends Effect {
     patternScale: number,
     threshold: number,
     pixelSize: number,
-    resolution: Vector2
+    resolution: Vector2,
+    ditherMode: number
   ) {
     // Set up texture wrapping for tiling
     blueNoiseTexture.wrapS = RepeatWrapping;
@@ -41,6 +44,8 @@ class DitherEffectImpl extends Effect {
           "cameraProjectionMatrixInverse",
           new Uniform(camera.projectionMatrixInverse),
         ],
+        ["ditherMode", new Uniform(ditherMode)],
+        ["ditherOffset", new Uniform(new Vector2(0, 0))],
       ]),
     });
 
@@ -48,6 +53,7 @@ class DitherEffectImpl extends Effect {
   }
 
   private readonly cameraRef: Camera;
+  private readonly prevEuler = new Euler();
 
   update(
     _renderer: WebGLRenderer,
@@ -72,6 +78,32 @@ class DitherEffectImpl extends Effect {
         cameraProjectionMatrixInverse.value =
           this.cameraRef.projectionMatrixInverse;
       }
+
+      // Compute screenspace dither offset for DIGITAL mode
+      // Formula: DitherOffset = ScreenSize * CameraRotation / CameraFov
+      const ditherModeUniform = this.uniforms.get("ditherMode");
+      if (ditherModeUniform?.value === 0) {
+        const ditherOffset = this.uniforms.get("ditherOffset");
+        if (ditherOffset) {
+          const cam = this.cameraRef as PerspectiveCamera;
+          const vFov = (cam.fov * Math.PI) / 180;
+          const aspect = cam.aspect;
+          const hFov = 2 * Math.atan(Math.tan(vFov / 2) * aspect);
+
+          // Extract camera rotation (yaw = Y, pitch = X)
+          const euler = this.prevEuler;
+          euler.setFromQuaternion(cam.quaternion, "YXZ");
+
+          const width = inputBuffer.width;
+          const height = inputBuffer.height;
+
+          // Offset = screen pixels * rotation / fov
+          ditherOffset.value.set(
+            (width * euler.y) / hFov,
+            (height * -euler.x) / vFov
+          );
+        }
+      }
     }
 
     // Update resolution uniform
@@ -89,12 +121,23 @@ interface DitherEffectProps {
   patternScale?: number;
   threshold?: number;
   pixelSize?: number;
+  displayMode?: "DIGITAL" | "ANALOG";
 }
 
 // React component wrapper
 const DitherEffect = forwardRef<typeof DitherEffectImpl, DitherEffectProps>(
-  ({ patternScale = 20.0, threshold = 0.5, pixelSize = 1.0 }, ref) => {
+  (
+    {
+      patternScale = 20.0,
+      threshold = 0.5,
+      pixelSize = 1.0,
+      displayMode = "ANALOG",
+    },
+    ref
+  ) => {
     const { camera, size } = useThree();
+
+    const ditherMode = displayMode === "DIGITAL" ? 0 : 1;
 
     // Load blue noise texture
     const blueNoiseTexture = useMemo(() => {
@@ -111,9 +154,18 @@ const DitherEffect = forwardRef<typeof DitherEffectImpl, DitherEffectProps>(
         patternScale,
         threshold,
         pixelSize,
-        resolution
+        resolution,
+        ditherMode
       );
-    }, [blueNoiseTexture, camera, patternScale, threshold, pixelSize, size]);
+    }, [
+      blueNoiseTexture,
+      camera,
+      patternScale,
+      threshold,
+      pixelSize,
+      size,
+      ditherMode,
+    ]);
 
     // Update uniform values when props change
     useMemo(() => {
@@ -121,6 +173,7 @@ const DitherEffect = forwardRef<typeof DitherEffectImpl, DitherEffectProps>(
         const patternScaleUniform = effect.uniforms.get("patternScale");
         const thresholdUniform = effect.uniforms.get("threshold");
         const pixelSizeUniform = effect.uniforms.get("pixelSize");
+        const ditherModeUniform = effect.uniforms.get("ditherMode");
 
         if (patternScaleUniform) {
           patternScaleUniform.value = patternScale;
@@ -131,8 +184,11 @@ const DitherEffect = forwardRef<typeof DitherEffectImpl, DitherEffectProps>(
         if (pixelSizeUniform) {
           pixelSizeUniform.value = pixelSize;
         }
+        if (ditherModeUniform) {
+          ditherModeUniform.value = ditherMode;
+        }
       }
-    }, [effect, patternScale, threshold, pixelSize]);
+    }, [effect, patternScale, threshold, pixelSize, ditherMode]);
 
     return <primitive dispose={null} object={effect} ref={ref} />;
   }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useGame } from "../game";
+import { type DisplayMode, useGame } from "../game";
 
 // UI timing constants
 const INSTRUCTIONS_DISPLAY_MS = 4000; // How long to show instructions before fading
@@ -8,8 +8,16 @@ const SHOT_FLASH_DURATION_MS = 100; // Duration of white flash when shooting
 const HIT_INDICATOR_DURATION_MS = 150; // Duration of red crosshair when hitting target
 
 export const UI = () => {
-  const { kills, score, isGameOver, startGame, lastShotTime, lastHitTime } =
-    useGame();
+  const {
+    kills,
+    score,
+    isGameOver,
+    startGame,
+    lastShotTime,
+    lastHitTime,
+    displayMode,
+    setDisplayMode,
+  } = useGame();
   const [showInstructions, setShowInstructions] = useState(true);
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [isMobile, setIsMobile] = useState(false);
@@ -101,6 +109,29 @@ export const UI = () => {
           >
             SPEED: {speedMultiplier}x
           </div>
+          <button
+            onClick={() => {
+              const next: DisplayMode =
+                displayMode === "DIGITAL" ? "ANALOG" : "DIGITAL";
+              setDisplayMode(next);
+            }}
+            style={{
+              position: "absolute",
+              bottom: "20px",
+              right: "20px",
+              pointerEvents: "all",
+              fontSize: "16px",
+              padding: "8px 16px",
+              backgroundColor: "transparent",
+              color: "#ffffff",
+              border: "1px solid rgba(255,255,255,0.4)",
+              cursor: "pointer",
+              fontFamily: '"VT323", monospace',
+            }}
+            type="button"
+          >
+            {displayMode}
+          </button>
         </>
       )}
 
