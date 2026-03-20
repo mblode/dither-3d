@@ -4,14 +4,39 @@ import { CameraControls } from "./components/camera-controls";
 import Effects from "./components/effects";
 import { GameControls } from "./components/game-controls";
 import { UI } from "./components/ui";
-import { GameProvider, INITIAL_CAMERA_POSITION, useGame } from "./game";
+import type { DisplayMode } from "./game";
+import { GameProvider, INITIAL_CAMERA_POSITION } from "./game";
 import Scene from "./scene";
 
 // Internal rendering resolution (matches Obra Dinn's setup)
 const INTERNAL_WIDTH = 800;
 
 function GameCanvas() {
-  const { displayMode } = useGame();
+  // Auto-select display mode:
+  // - Mobile: always ANALOG (effectively fullscreen, softened output reduces discomfort)
+  // - Desktop fullscreen: ANALOG (sphere-mapped dither, softened output)
+  // - Desktop windowed: DIGITAL (border-boxed, screenspace offset dither, 1-bit output)
+  const [displayMode, setDisplayMode] = useState<DisplayMode>(() => {
+    const isMobile = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+    if (isMobile) {
+      return "ANALOG";
+    }
+    return document.fullscreenElement ? "ANALOG" : "DIGITAL";
+  });
+
+  useEffect(() => {
+    const isMobile = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+    if (isMobile) {
+      return;
+    }
+
+    const onFullscreenChange = () => {
+      setDisplayMode(document.fullscreenElement ? "ANALOG" : "DIGITAL");
+    };
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+    return () =>
+      document.removeEventListener("fullscreenchange", onFullscreenChange);
+  }, []);
 
   // Compute dpr to achieve ~800px wide internal rendering resolution
   // This preserves the low-res pixelated style at any screen size
@@ -43,7 +68,6 @@ function GameCanvas() {
           far: 500,
         }}
         dpr={renderDpr}
-        style={{ imageRendering: "pixelated" }}
       >
         {/* Multi-directional lighting for maximum asteroid visibility */}
         <ambientLight intensity={1.0} />

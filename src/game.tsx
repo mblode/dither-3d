@@ -25,7 +25,6 @@ const INITIAL_GAME_STATE = {
   speed: 8,
   lastShotTime: 0,
   lastHitTime: 0,
-  displayMode: "ANALOG" as DisplayMode,
 };
 
 export interface Asteroid {
@@ -59,7 +58,6 @@ interface GameState {
   speed: number;
   lastShotTime: number;
   lastHitTime: number;
-  displayMode: DisplayMode;
 }
 
 interface GameContextType extends GameState {
@@ -82,7 +80,6 @@ interface GameContextType extends GameState {
   setCameraVelocity: (vel: [number, number, number]) => void;
   setLastShotTime: (time: number) => void;
   setLastHitTime: (time: number) => void;
-  setDisplayMode: (mode: DisplayMode) => void;
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -103,10 +100,7 @@ export const GameProvider = ({ children }: GameProviderProps) => {
   const [gameState, setGameState] = useState<GameState>(INITIAL_GAME_STATE);
 
   const startGame = useCallback(() => {
-    setGameState((prev) => ({
-      ...INITIAL_GAME_STATE,
-      displayMode: prev.displayMode,
-    }));
+    setGameState(INITIAL_GAME_STATE);
   }, []);
 
   const endGame = useCallback(() => {
@@ -201,13 +195,6 @@ export const GameProvider = ({ children }: GameProviderProps) => {
     }));
   }, []);
 
-  const setDisplayMode = useCallback((mode: DisplayMode) => {
-    setGameState((prev) => ({
-      ...prev,
-      displayMode: mode,
-    }));
-  }, []);
-
   // Batched update for asteroid destruction - combines multiple state updates into one
   const handleAsteroidDestroyed = useCallback(
     (
@@ -255,7 +242,6 @@ export const GameProvider = ({ children }: GameProviderProps) => {
         setCameraVelocity,
         setLastShotTime,
         setLastHitTime,
-        setDisplayMode,
       }}
     >
       {children}
