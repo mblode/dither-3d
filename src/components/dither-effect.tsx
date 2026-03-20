@@ -16,6 +16,8 @@ import {
 } from "three";
 import fragmentShader from "../shaders/dither.frag";
 
+const BLUE_NOISE_SIZE = 128.0;
+
 // Custom Dither Effect class
 class DitherEffectImpl extends Effect {
   constructor(
@@ -46,6 +48,7 @@ class DitherEffectImpl extends Effect {
         ],
         ["ditherMode", new Uniform(ditherMode)],
         ["ditherOffset", new Uniform(new Vector2(0, 0))],
+        ["blueNoiseSize", new Uniform(BLUE_NOISE_SIZE)],
       ]),
     });
 
@@ -53,7 +56,7 @@ class DitherEffectImpl extends Effect {
   }
 
   private readonly cameraRef: Camera;
-  private readonly prevEuler = new Euler();
+  private readonly tempEuler = new Euler();
 
   update(
     _renderer: WebGLRenderer,
@@ -91,7 +94,7 @@ class DitherEffectImpl extends Effect {
           const hFov = 2 * Math.atan(Math.tan(vFov / 2) * aspect);
 
           // Extract camera rotation (yaw = Y, pitch = X)
-          const euler = this.prevEuler;
+          const euler = this.tempEuler;
           euler.setFromQuaternion(cam.quaternion, "YXZ");
 
           const width = inputBuffer.width;
@@ -145,7 +148,7 @@ const DitherEffect = forwardRef<typeof DitherEffectImpl, DitherEffectProps>(
       return loader.load("/blue-noise.png");
     }, []);
 
-    // Create effect instance with camera
+    // Create effect instance with camera (stable — does not recreate on mode switch)
     const effect = useMemo(() => {
       const resolution = new Vector2(size.width, size.height);
       return new DitherEffectImpl(
@@ -155,19 +158,11 @@ const DitherEffect = forwardRef<typeof DitherEffectImpl, DitherEffectProps>(
         threshold,
         pixelSize,
         resolution,
-        ditherMode
+        0
       );
-    }, [
-      blueNoiseTexture,
-      camera,
-      patternScale,
-      threshold,
-      pixelSize,
-      size,
-      ditherMode,
-    ]);
+    }, [blueNoiseTexture, camera, patternScale, threshold, pixelSize, size]);
 
-    // Update uniform values when props change
+    // Update uniform values when props change (including mode switches)
     useMemo(() => {
       if (effect) {
         const patternScaleUniform = effect.uniforms.get("patternScale");

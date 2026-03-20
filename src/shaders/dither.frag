@@ -7,6 +7,7 @@ uniform float pixelSize;
 uniform vec2 resolution;
 uniform int ditherMode; // 0 = DIGITAL (screen offset), 1 = ANALOG (sphere mapped)
 uniform vec2 ditherOffset; // Pixel offset for DIGITAL mode screen-space tracking
+uniform float blueNoiseSize; // Texture dimensions (e.g. 128.0 for 128x128)
 
 // Convert sRGB to linear RGB
 vec3 sRGBToLinear(vec3 srgb) {
@@ -42,40 +43,13 @@ float sphereDitherSample(vec2 sampleUV) {
 }
 
 void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor) {
-  // Apply pixelation effect (low-res chunky look)
-  vec2 pixelatedUV = uv;
-  if (pixelSize > 1.0) {
-    vec2 pixelCount = resolution / pixelSize;
-    pixelatedUV = floor(uv * pixelCount) / pixelCount;
-  }
-
-  // Calculate luminance
-  float luma = dot(inputColor.rgb, vec3(0.299, 0.587, 0.114));
-
-  // Apply threshold adjustment
-  float adjustedLuma = clamp(luma + threshold - 0.5, 0.0, 1.0);
-
   // Custom colors: #333319 (dark gray-green) and #ffffff (white)
   vec3 darkColorSRGB = vec3(51.0/255.0, 51.0/255.0, 25.0/255.0);
   vec3 darkColor = sRGBToLinear(darkColorSRGB);
   vec3 lightColor = vec3(1.0, 1.0, 1.0);
 
-  float dithered;
-
+  // DIGITAL mode: border-box check first, before any dither computation
   if (ditherMode == 0) {
-    // DIGITAL MODE: Screen-mapped dither with camera rotation offset
-    // Pattern tiles 1:1 with screen pixels, shifted by ditherOffset
-    // Formula: DitherOffset = ScreenSize * CameraRotation / CameraFov
-    vec2 pixelCoord = pixelatedUV * resolution;
-    vec2 offsetCoord = pixelCoord + ditherOffset;
-
-    // Tile the blue noise 1:1 with pixels (128x128 texture)
-    float noise = texture2D(tBlueNoise, fract(offsetCoord / 128.0)).r;
-
-    // Pure 1-bit output
-    dithered = step(noise, adjustedLuma);
-
-    // Border-box: black bars to enforce 16:9 aspect ratio
     float targetAspect = 16.0 / 9.0;
     float screenAspect = resolution.x / resolution.y;
 
@@ -96,6 +70,35 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
         return;
       }
     }
+  }
+
+  // Apply pixelation effect (low-res chunky look)
+  vec2 pixelatedUV = uv;
+  if (pixelSize > 1.0) {
+    vec2 pixelCount = resolution / pixelSize;
+    pixelatedUV = floor(uv * pixelCount) / pixelCount;
+  }
+
+  // Calculate luminance
+  float luma = dot(inputColor.rgb, vec3(0.299, 0.587, 0.114));
+
+  // Apply threshold adjustment
+  float adjustedLuma = clamp(luma + threshold - 0.5, 0.0, 1.0);
+
+  float dithered;
+
+  if (ditherMode == 0) {
+    // DIGITAL MODE: Screen-mapped dither with camera rotation offset
+    // Pattern tiles 1:1 with screen pixels, shifted by ditherOffset
+    // Formula: DitherOffset = ScreenSize * CameraRotation / CameraFov
+    vec2 pixelCoord = pixelatedUV * resolution;
+    vec2 offsetCoord = pixelCoord + ditherOffset;
+
+    // Tile the blue noise 1:1 with pixels
+    float noise = texture2D(tBlueNoise, fract(offsetCoord / blueNoiseSize)).r;
+
+    // Pure 1-bit output
+    dithered = step(noise, adjustedLuma);
 
   } else {
     // ANALOG MODE: Sphere-mapped dither with 2x2 supersampling

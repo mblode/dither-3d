@@ -1,4 +1,5 @@
 import { Canvas } from "@react-three/fiber";
+import { useEffect, useState } from "react";
 import { CameraControls } from "./components/camera-controls";
 import Effects from "./components/effects";
 import { GameControls } from "./components/game-controls";
@@ -6,8 +7,25 @@ import { UI } from "./components/ui";
 import { GameProvider, INITIAL_CAMERA_POSITION, useGame } from "./game";
 import Scene from "./scene";
 
+// Internal rendering resolution (matches Obra Dinn's setup)
+const INTERNAL_WIDTH = 800;
+
 function GameCanvas() {
   const { displayMode } = useGame();
+
+  // Compute dpr to achieve ~800px wide internal rendering resolution
+  // This preserves the low-res pixelated style at any screen size
+  const [renderDpr, setRenderDpr] = useState(1);
+
+  useEffect(() => {
+    const updateDpr = () => {
+      const dpr = Math.min(1, INTERNAL_WIDTH / window.innerWidth);
+      setRenderDpr(dpr);
+    };
+    updateDpr();
+    window.addEventListener("resize", updateDpr);
+    return () => window.removeEventListener("resize", updateDpr);
+  }, []);
 
   return (
     <div
@@ -24,7 +42,8 @@ function GameCanvas() {
           near: 0.1,
           far: 500,
         }}
-        dpr={[1, 2]}
+        dpr={renderDpr}
+        style={{ imageRendering: "pixelated" }}
       >
         {/* Multi-directional lighting for maximum asteroid visibility */}
         <ambientLight intensity={1.0} />

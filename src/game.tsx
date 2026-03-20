@@ -103,7 +103,10 @@ export const GameProvider = ({ children }: GameProviderProps) => {
   const [gameState, setGameState] = useState<GameState>(INITIAL_GAME_STATE);
 
   const startGame = useCallback(() => {
-    setGameState(INITIAL_GAME_STATE);
+    setGameState((prev) => ({
+      ...INITIAL_GAME_STATE,
+      displayMode: prev.displayMode,
+    }));
   }, []);
 
   const endGame = useCallback(() => {
