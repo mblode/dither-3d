@@ -1,4 +1,5 @@
 import { Canvas } from "@react-three/fiber";
+import { useEffect, useState } from "react";
 import { CameraControls } from "./components/camera-controls";
 import Effects from "./components/effects";
 import { GameControls } from "./components/game-controls";
@@ -6,10 +7,32 @@ import { UI } from "./components/ui";
 import { GameProvider, INITIAL_CAMERA_POSITION } from "./game";
 import Scene from "./scene";
 
-export default function App() {
+// Internal rendering resolution (matches Obra Dinn's setup)
+const INTERNAL_WIDTH = 800;
+
+function GameCanvas() {
+  // Compute dpr to achieve ~800px wide internal rendering resolution
+  // This preserves the low-res pixelated style at any screen size
+  const [renderDpr, setRenderDpr] = useState(1);
+
+  useEffect(() => {
+    const updateDpr = () => {
+      const dpr = Math.min(1, INTERNAL_WIDTH / window.innerWidth);
+      setRenderDpr(dpr);
+    };
+    updateDpr();
+    window.addEventListener("resize", updateDpr);
+    return () => window.removeEventListener("resize", updateDpr);
+  }, []);
+
   return (
-    <GameProvider>
-      <UI />
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        backgroundColor: "#000000",
+      }}
+    >
       <Canvas
         camera={{
           position: INITIAL_CAMERA_POSITION,
@@ -17,7 +40,7 @@ export default function App() {
           near: 0.1,
           far: 500,
         }}
-        dpr={[1, 2]}
+        dpr={renderDpr}
       >
         {/* Multi-directional lighting for maximum asteroid visibility */}
         <ambientLight intensity={1.0} />
@@ -47,6 +70,15 @@ export default function App() {
         {/* Post-processing with dither effect */}
         <Effects patternScale={12.0} threshold={0.5} />
       </Canvas>
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <GameProvider>
+      <UI />
+      <GameCanvas />
     </GameProvider>
   );
 }
