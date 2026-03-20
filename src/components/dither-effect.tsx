@@ -8,7 +8,6 @@ import {
   TextureLoader,
   Uniform,
   Vector2,
-  Vector3,
   type WebGLRenderer,
   type WebGLRenderTarget,
 } from "three";
@@ -35,7 +34,6 @@ class DitherEffectImpl extends Effect {
         ["threshold", new Uniform(threshold)],
         ["pixelSize", new Uniform(pixelSize)],
         ["resolution", new Uniform(resolution)],
-        ["cameraPosition", new Uniform(new Vector3())],
         ["cameraWorldMatrix", new Uniform(camera.matrixWorld)],
         [
           "cameraProjectionMatrixInverse",
@@ -56,15 +54,11 @@ class DitherEffectImpl extends Effect {
   ) {
     // Update camera uniforms each frame
     if (this.cameraRef) {
-      const cameraPos = this.uniforms.get("cameraPosition");
       const cameraWorldMatrix = this.uniforms.get("cameraWorldMatrix");
       const cameraProjectionMatrixInverse = this.uniforms.get(
         "cameraProjectionMatrixInverse"
       );
 
-      if (cameraPos) {
-        cameraPos.value.copy(this.cameraRef.position);
-      }
       if (cameraWorldMatrix) {
         cameraWorldMatrix.value = this.cameraRef.matrixWorld;
       }
