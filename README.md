@@ -125,3 +125,7 @@ The project uses a blue noise texture (`blue-noise.png`) which provides better p
 ## License
 
 ISC
+
+---
+
+Crafted by [<img src="https://matthewblode.com/avatar-sm.png" width="20" align="top" />](https://matthewblode.com) [Matthew Blode](https://matthewblode.com)
